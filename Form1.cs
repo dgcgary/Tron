@@ -24,9 +24,12 @@ namespace Tron
 
             // Configurar el Timer
             timer = new System.Windows.Forms.Timer();
-            timer.Interval = 1; // Ajusta el intervalo según sea necesario
+            timer.Interval = 5; // Ajusta el intervalo según sea necesario
             timer.Tick += new EventHandler(Timer_Tick);
             timer.Start();
+
+            // Establecer el color de fondo 
+            this.BackColor = Color.Black;
         }
 
         private void Form1_KeyDown(object? sender, KeyEventArgs e)
@@ -57,15 +60,14 @@ namespace Tron
         {
             jugador.Mover();
             // Verificar límites del formulario
-            if (jugador.X < 0 || jugador.X >= this.ClientSize.Width - jugador.Width ||
-                jugador.Y < 0 || jugador.Y >= this.ClientSize.Height - jugador.Height)
+            if (jugador.Cabeza.X < 0 || jugador.Cabeza.X >= this.ClientSize.Width - jugador.Width ||
+                jugador.Cabeza.Y < 0 || jugador.Cabeza.Y >= this.ClientSize.Height - jugador.Height)
             {
                 // Detener el juego o manejar la colisión
                 timer.Stop();
-                MessageBox.Show("El jugador se ha salido de los límites!");
+                MessageBox.Show("El jugador se ha estrellado!");
             }
             this.Invalidate(); // Redibuja el formulario
         }
     }
 }
-
