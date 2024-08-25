@@ -1,87 +1,69 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+﻿using System.Drawing;
 
 namespace Tron
 {
-
-    public class Node
-    {
-        public int X { get; set; }
-        public int Y { get; set; }
-        public Node? Up { get; set; }
-        public Node? Down { get; set; }
-        public Node? Left { get; set; }
-        public Node? Right { get; set; }
-    }
-
     public class Grid
     {
-        private Node[,] nodes;
-        private int width;
-        private int height;
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        public int TileSize { get; private set; }
 
-        public Grid(int width, int height)
+        public Grid(int width, int height, int tileSize)
         {
-            this.width = width;
-            this.height = height;
-            nodes = new Node[width, height];
+            this.Width = width;
+            this.Height = height;
+            this.TileSize = tileSize;
+        }
 
-            for (int x = 0; x < width; x++)
+        public Point GetTilePosition(int x, int y)
+        {
+            int tileX = x / TileSize;
+            int tileY = y / TileSize;
+            return new Point(tileX, tileY);
+        }
+
+        public Point GetPixelPosition(int tileX, int tileY)
+        {
+            int x = tileX * TileSize;
+            int y = tileY * TileSize;
+            return new Point(x, y);
+        }
+
+        public void DrawGrid(Graphics g)
+        {
+            Pen pen = new Pen(Color.Gray);
+            for (int x = 0; x <= Width; x++)
             {
-                for (int y = 0; y < height; y++)
-                {
-                    nodes[x, y] = new Node { X = x * 20, Y = y * 20 };
-                }
+                g.DrawLine(pen, x * TileSize, 0, x * TileSize, Height * TileSize);
             }
-
-            // Conectar nodos
-            for (int x = 0; x < width; x++)
+            for (int y = 0; y <= Height; y++)
             {
-                for (int y = 0; y < height; y++)
-                {
-                    Node node = nodes[x, y];
-
-                    if (x > 0) node.Left = nodes[x - 1, y];
-                    if (x < width - 1) node.Right = nodes[x + 1, y];
-                    if (y > 0) node.Up = nodes[x, y - 1];
-                    if (y < height - 1) node.Down = nodes[x, y + 1];
-                }
+                g.DrawLine(pen, 0, y * TileSize, Width * TileSize, y * TileSize);
             }
         }
 
-        public Node GetStartNode()
+        public void DrawPlayer(Graphics g, Player player)
         {
-            return nodes[0, 0];
+            foreach (var nodo in player.GetEstela())
+            {
+                Point pos = GetPixelPosition(nodo.X, nodo.Y);
+                g.FillRectangle(Brushes.Blue, pos.X, pos.Y, TileSize, TileSize);
+            }
+
+            Point cabezaPos = GetPixelPosition(player.Cabeza.X, player.Cabeza.Y);
+            g.FillRectangle(Brushes.Red, cabezaPos.X, cabezaPos.Y, TileSize, TileSize);
         }
 
-        public void Draw(Graphics g, Player player)
+        public void DrawBot(Graphics g, Bot bot)
         {
-            using (Pen pen = new Pen(Color.Gray, 1))
+            foreach (var nodo in bot.GetEstela())
             {
-                for (int x = 0; x < width; x++)
-                {
-                    // Draw vertical lines
-                    g.DrawLine(pen, x * 20, 0, x * 20, height * 20);
-                }
-
-                for (int y = 0; y < height; y++)
-                {
-                    // Draw horizontal lines
-                    g.DrawLine(pen, 0, y * 20, width * 20, y * 20);
-                }
-
-                //Draw player
-                using (Brush brush = new SolidBrush(Color.Red))
-                {
-                    g.FillRectangle(brush, player.X, player.Y, 20, 20);
-                }
-
+                Point pos = GetPixelPosition(nodo.X, nodo.Y);
+                g.FillRectangle(Brushes.Green, pos.X, pos.Y, TileSize, TileSize);
             }
+
+            Point cabezaPos = GetPixelPosition(bot.Cabeza.X, bot.Cabeza.Y);
+            g.FillRectangle(Brushes.Yellow, cabezaPos.X, cabezaPos.Y, TileSize, TileSize);
         }
     }
-
 }
