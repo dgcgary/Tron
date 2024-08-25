@@ -1,62 +1,57 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Drawing;
 
 namespace Tron
 {
+    public enum Direccion
+    {
+        Arriba,
+        Abajo,
+        Izquierda,
+        Derecha
+    }
+
     public class Player
     {
-        public Node CurrentNode { get; set; }
-        public int X { get; set; }
-        public int Y { get; set; }
+        public int X { get; private set; }
+        public int Y { get; private set; }
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        public int Velocidad { get; private set; }
+        public Direccion DireccionActual { get; private set; }
 
-        public Player(Node startingNode)
+        public Player(int x, int y, int width, int height, int velocidad)
         {
-            CurrentNode = startingNode;
-            X = startingNode.X;
-            Y = startingNode.Y;
+            this.X = x;
+            this.Y = y;
+            this.Width = width;
+            this.Height = height;
+            this.Velocidad = velocidad;
+            this.DireccionActual = Direccion.Derecha; // Dirección inicial
         }
 
-        public void MoveUp(Grid grid)
+        public void CambiarDireccion(Direccion nuevaDireccion)
         {
-            if (CurrentNode.Up != null)
-            {
-                CurrentNode = CurrentNode.Up;
-                X = CurrentNode.X;
-                Y = CurrentNode.Y;
-            }
+            this.DireccionActual = nuevaDireccion;
         }
 
-        public void MoveDown(Grid grid)
+        public void Mover()
         {
-            if (CurrentNode.Down != null)
+            switch (DireccionActual)
             {
-                CurrentNode = CurrentNode.Down;
-                X = CurrentNode.X;
-                Y = CurrentNode.Y;
-            }
-        }
-
-        public void MoveLeft(Grid grid)
-        {
-            if (CurrentNode.Left != null)
-            {
-                CurrentNode = CurrentNode.Left;
-                X = CurrentNode.X;
-                Y = CurrentNode.Y;
-            }
-        }
-
-        public void MoveRight(Grid grid)
-        {
-            if (CurrentNode.Right != null)
-            {
-                CurrentNode = CurrentNode.Right;
-                X = CurrentNode.X;
-                Y = CurrentNode.Y;
+                case Direccion.Arriba:
+                    this.Y -= Velocidad;
+                    break;
+                case Direccion.Abajo:
+                    this.Y += Velocidad;
+                    break;
+                case Direccion.Izquierda:
+                    this.X -= Velocidad;
+                    break;
+                case Direccion.Derecha:
+                    this.X += Velocidad;
+                    break;
             }
         }
     }
 }
+
