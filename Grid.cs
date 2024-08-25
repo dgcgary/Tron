@@ -3,9 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Tron
 {
+
+    public class Node
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public Node? Up { get; set; }
+        public Node? Down { get; set; }
+        public Node? Left { get; set; }
+        public Node? Right { get; set; }
+    }
+
     public class Grid
     {
         private Node[,] nodes;
@@ -22,7 +34,7 @@ namespace Tron
             {
                 for (int y = 0; y < height; y++)
                 {
-                    nodes[x, y] = new Node { X = x * 15, Y = y * 15 };
+                    nodes[x, y] = new Node { X = x * 20, Y = y * 20 };
                 }
             }
 
@@ -41,22 +53,33 @@ namespace Tron
             }
         }
 
-        public void Draw(Graphics g)
+        public Node GetStartNode()
+        {
+            return nodes[0, 0];
+        }
+
+        public void Draw(Graphics g, Player player)
         {
             using (Pen pen = new Pen(Color.Gray, 1))
             {
                 for (int x = 0; x < width; x++)
                 {
-                    for (int y = 0; y < height; y++)
-                    {
-                        Node node = nodes[x, y];
-
-                        if (node.Up != null) g.DrawLine(pen, node.X, node.Y, node.Up.X, node.Up.Y);
-                        if (node.Down != null) g.DrawLine(pen, node.X, node.Y, node.Down.X, node.Down.Y);
-                        if (node.Left != null) g.DrawLine(pen, node.X, node.Y, node.Left.X, node.Left.Y);
-                        if (node.Right != null) g.DrawLine(pen, node.X, node.Y, node.Right.X, node.Right.Y);
-                    }
+                    // Draw vertical lines
+                    g.DrawLine(pen, x * 20, 0, x * 20, height * 20);
                 }
+
+                for (int y = 0; y < height; y++)
+                {
+                    // Draw horizontal lines
+                    g.DrawLine(pen, 0, y * 20, width * 20, y * 20);
+                }
+
+                //Draw player
+                using (Brush brush = new SolidBrush(Color.Red))
+                {
+                    g.FillRectangle(brush, player.X, player.Y, 20, 20);
+                }
+
             }
         }
     }
