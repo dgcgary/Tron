@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+using System.Drawing;
 
 namespace Tron
 {
-
     public class Node
     {
         public int X { get; set; }
@@ -60,28 +55,38 @@ namespace Tron
 
         public void Draw(Graphics g, Player player)
         {
-            using (Pen pen = new Pen(Color.Gray, 1))
+            using (Pen pen = new Pen(Color.White, 1))
             {
                 for (int x = 0; x < width; x++)
                 {
-                    // Draw vertical lines
+                    // Dibujar líneas verticales
                     g.DrawLine(pen, x * 20, 0, x * 20, height * 20);
                 }
 
                 for (int y = 0; y < height; y++)
                 {
-                    // Draw horizontal lines
+                    // Dibujar líneas horizontales
                     g.DrawLine(pen, 0, y * 20, width * 20, y * 20);
                 }
 
-                //Draw player
+                // Dibujar jugador
                 using (Brush brush = new SolidBrush(Color.Red))
                 {
-                    g.FillRectangle(brush, player.X, player.Y, 20, 20);
+                    g.FillRectangle(brush, player.Cabeza.X, player.Cabeza.Y, player.Width, player.Height);
                 }
 
+                // Dibujar estela
+                int alpha = 255;
+                int decremento = 255 / Player.LongitudEstela; // Ajustar decremento para la longitud de la estela
+                foreach (var nodo in player.GetEstela())
+                {
+                    using (Brush brush = new SolidBrush(Color.FromArgb(alpha, Color.Red)))
+                    {
+                        g.FillRectangle(brush, nodo.X, nodo.Y, player.Width, player.Height);
+                    }
+                    alpha -= decremento;
+                }
             }
         }
     }
-
 }
