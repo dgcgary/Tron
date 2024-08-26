@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Tron
+﻿namespace Tron
 {
     public class Nodo
     {
@@ -16,7 +10,6 @@ namespace Tron
         {
             this.X = x;
             this.Y = y;
-            this.Siguiente = null;
         }
     }
 }

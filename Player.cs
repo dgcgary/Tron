@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Drawing;
 
 namespace Tron
 {
@@ -19,7 +18,7 @@ namespace Tron
         public int Velocidad { get; private set; }
         public Direccion DireccionActual { get; private set; }
         private Queue<Nodo> estela; // Cola para manejar la estela
-        public const int LongitudEstela = 3; // Longitud de la estela
+        public const int LongitudEstela = 9; // Longitud de la estela
 
         public Player(int x, int y, int width, int height, int velocidad)
         {
@@ -44,16 +43,16 @@ namespace Tron
             switch (DireccionActual)
             {
                 case Direccion.Arriba:
-                    nuevoY -= Velocidad;
+                    nuevoY -= 1;
                     break;
                 case Direccion.Abajo:
-                    nuevoY += Velocidad;
+                    nuevoY += 1;
                     break;
                 case Direccion.Izquierda:
-                    nuevoX -= Velocidad;
+                    nuevoX -= 1;
                     break;
                 case Direccion.Derecha:
-                    nuevoX += Velocidad;
+                    nuevoX += 1;
                     break;
             }
 
