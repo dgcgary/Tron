@@ -12,16 +12,20 @@ namespace Tron
         private Grid grid;
         private Random random;
         private System.Windows.Forms.Timer timer; // Especifica el espacio de nombres correcto
+        private System.Windows.Forms.Timer botDirectionTimer; // Nuevo temporizador para cambiar la dirección de los bots
+        private Label lblCombustible; // Label para mostrar el combustible
+        private List<Nodo> celdasCombustible; // Lista de celdas de combustible
+        private Image imagenCombustible; // Imagen de la celda de combustible
 
         public Form1()
         {
             InitializeComponent();
             random = new Random();
-            int velocidad = random.Next(1, 11); // Velocidad aleatoria entre 1 y 10
-            int tileSize = 50; // Define el tamaño de los cuadros
+            int velocidadJugador = random.Next(1, 11); // Velocidad aleatoria entre 1 y 10 para el jugador
+            int tileSize = 40; // Define el tamaño de los cuadros a 40x40
             int gridWidth = 1920 / tileSize;
             int gridHeight = 1080 / tileSize;
-            this.jugador = new Player(gridWidth / 2, gridHeight / 2, tileSize, tileSize, velocidad);
+            this.jugador = new Player(gridWidth / 2, gridHeight / 2, tileSize, tileSize, velocidadJugador);
             this.grid = new Grid(gridWidth, gridHeight, tileSize); // Ajusta el tamaño de la cuadrícula según sea necesario
             this.DoubleBuffered = true;
             this.KeyDown += new KeyEventHandler(Form1_KeyDown);
@@ -31,19 +35,39 @@ namespace Tron
             bots = new List<Bot>();
             for (int i = 0; i < 4; i++)
             {
-                int botVelocidad = random.Next(1, 11);
+                int botVelocidad = random.Next(1, 11); // Velocidad aleatoria entre 1 y 10 para los bots
                 Bot bot = new Bot(random.Next(0, gridWidth - 1), random.Next(0, gridHeight - 1), tileSize, tileSize, botVelocidad);
                 bots.Add(bot);
             }
 
-            // Configurar el Timer
+            // Configurar el Timer para el movimiento
             timer = new System.Windows.Forms.Timer();
-            timer.Interval = 40; // Ajusta el intervalo según sea necesario
+            timer.Interval = 100; // Ajusta el intervalo a 20 ms para hacer que las motos se muevan más suavemente
             timer.Tick += new EventHandler(Timer_Tick);
             timer.Start();
 
+            // Configurar el Timer para cambiar la dirección de los bots
+            botDirectionTimer = new System.Windows.Forms.Timer();
+            botDirectionTimer.Interval = 500; // Cambiar dirección cada 500 ms
+            botDirectionTimer.Tick += new EventHandler(BotDirectionTimer_Tick);
+            botDirectionTimer.Start();
+
             // Establecer el color de fondo 
             this.BackColor = Color.Black;
+
+            // Crear y configurar el Label para mostrar el combustible
+            lblCombustible = new Label();
+            lblCombustible.AutoSize = true;
+            lblCombustible.ForeColor = Color.White;
+            lblCombustible.Location = new Point(10, 10);
+            lblCombustible.Font = new Font("Arial", 16, FontStyle.Bold);
+            this.Controls.Add(lblCombustible);
+
+            // Inicializar la lista de celdas de combustible
+            celdasCombustible = new List<Nodo>();
+            GenerarCeldasCombustible();
+            string rutaImagen = System.IO.Path.Combine(Application.StartupPath, "gasolina.png");
+            imagenCombustible = Image.FromFile(rutaImagen);
         }
 
         private void Form1_KeyDown(object? sender, KeyEventArgs e)
@@ -69,30 +93,168 @@ namespace Tron
         {
             grid.DrawGrid(e.Graphics);
             grid.DrawPlayer(e.Graphics, jugador);
+
             foreach (var bot in bots)
             {
                 grid.DrawBot(e.Graphics, bot);
             }
+
+            // Dibujar celdas de combustible
+            foreach (var celda in celdasCombustible)
+            {
+                e.Graphics.DrawImage(imagenCombustible, celda.X * grid.TileSize, celda.Y * grid.TileSize, grid.TileSize, grid.TileSize);
+            }
         }
+
+
 
         private void Timer_Tick(object? sender, EventArgs e)
         {
-            jugador.Mover();
+            // Invalidate las posiciones de la estela del jugador antes de moverlo
+            foreach (var posicion in jugador.ObtenerHistorialPosiciones())
+            {
+                var rectEstela = new Rectangle(posicion.X * grid.TileSize, posicion.Y * grid.TileSize, grid.TileSize, grid.TileSize);
+                this.Invalidate(rectEstela);
+            }
+
+            // Guardar la posición anterior del jugador
+            var posicionAnteriorJugador = new Rectangle(jugador.Cabeza.X * grid.TileSize, jugador.Cabeza.Y * grid.TileSize, grid.TileSize, grid.TileSize);
+
+            bool jugadorEstrellado = jugador.Mover(grid.Width, grid.Height);
+
+            // Invalidate la posición anterior del jugador
+            this.Invalidate(posicionAnteriorJugador);
+
+            // Invalidate la nueva posición del jugador
+            var nuevaPosicionJugador = new Rectangle(jugador.Cabeza.X * grid.TileSize, jugador.Cabeza.Y * grid.TileSize, grid.TileSize, grid.TileSize);
+            this.Invalidate(nuevaPosicionJugador);
+
+            List<Bot> botsAEliminar = new List<Bot>();
+
             foreach (var bot in bots)
             {
-                bot.MoverAleatorio(this.ClientSize.Width, this.ClientSize.Height, timer.Interval);
+                // Invalidate las posiciones de la estela del bot antes de moverlo
+                foreach (var posicion in bot.GetEstela())
+                {
+                    var rectEstelaBot = new Rectangle(posicion.X * grid.TileSize, posicion.Y * grid.TileSize, grid.TileSize, grid.TileSize);
+                    this.Invalidate(rectEstelaBot);
+                }
+
+                // Guardar la posición anterior del bot
+                var posicionAnteriorBot = new Rectangle(bot.Cabeza.X * grid.TileSize, bot.Cabeza.Y * grid.TileSize, grid.TileSize, grid.TileSize);
+
+                bot.MoverAleatorio(grid.Width, grid.Height, timer.Interval);
+
+                // Invalidate la posición anterior del bot
+                this.Invalidate(posicionAnteriorBot);
+
+                // Invalidate la nueva posición del bot
+                var nuevaPosicionBot = new Rectangle(bot.Cabeza.X * grid.TileSize, bot.Cabeza.Y * grid.TileSize, grid.TileSize, grid.TileSize);
+                this.Invalidate(nuevaPosicionBot);
+
+                // Verificar colisiones entre el jugador y los bots
+                if (jugador.ColisionaCon(bot.Cabeza) || bot.ColisionaCon(jugador.Cabeza))
+                {
+                    timer.Stop();
+                    MessageBox.Show("¡Colisión! Ambos jugadores han muerto.");
+                    return;
+                }
+
+                // Verificar colisiones con las estelas
+                foreach (var posicion in jugador.ObtenerHistorialPosiciones())
+                {
+                    if (bot.ColisionaCon(posicion))
+                    {
+                        botsAEliminar.Add(bot);
+                        break;
+                    }
+                }
+
+                foreach (var otroBot in bots)
+                {
+                    if (bot != otroBot && bot.ColisionaCon(otroBot.Cabeza))
+                    {
+                        botsAEliminar.Add(bot);
+                        botsAEliminar.Add(otroBot);
+                        break;
+                    }
+                }
             }
 
-            // Verificar límites del formulario para el jugador
-            if (jugador.Cabeza.X < 0 || jugador.Cabeza.X >= this.ClientSize.Width / grid.TileSize ||
-                jugador.Cabeza.Y < 0 || jugador.Cabeza.Y >= this.ClientSize.Height / grid.TileSize)
+            // Eliminar los bots que han chocado
+            foreach (var bot in botsAEliminar)
             {
-                // Detener el juego o manejar la colisión
+                bots.Remove(bot);
+            }
+
+            // Verificar colisiones con las estelas de los bots
+            foreach (var bot in bots)
+            {
+                foreach (var posicion in bot.GetEstela())
+                {
+                    if (jugador.ColisionaCon(posicion))
+                    {
+                        timer.Stop();
+                        MessageBox.Show("¡Colisión con la estela! El jugador ha muerto.");
+                        return;
+                    }
+                }
+            }
+
+            // Verificar si el jugador se ha estrellado
+            if (jugadorEstrellado)
+            {
                 timer.Stop();
                 MessageBox.Show("El jugador se ha estrellado!");
+                return;
             }
 
-            this.Invalidate(); // Redibuja el formulario
+            // Verificar si el combustible se ha agotado
+            if (jugador.Combustible <= 0)
+            {
+                timer.Stop();
+                MessageBox.Show("La moto se quedó sin combustible!");
+                return;
+            }
+
+            // Verificar si el jugador recoge una celda de combustible
+            for (int i = celdasCombustible.Count - 1; i >= 0; i--)
+            {
+                if (jugador.Cabeza.X == celdasCombustible[i].X && jugador.Cabeza.Y == celdasCombustible[i].Y)
+                {
+                    double cantidadCombustible = random.Next(10, 21); // Cantidad aleatoria de combustible entre 10 y 20
+                    jugador.RecargarCombustible(cantidadCombustible);
+                    celdasCombustible.RemoveAt(i);
+                }
+            }
+
+            // Reducir el combustible del jugador
+            jugador.ReducirCombustible(0.1);
+
+            // Actualizar el Label del combustible
+            lblCombustible.Text = $"Combustible: {jugador.Combustible:F1}";
+        }
+
+
+
+
+        private void BotDirectionTimer_Tick(object? sender, EventArgs e)
+        {
+            foreach (var bot in bots)
+            {
+                bot.CambiarDireccionAleatoria();
+            }
+        }
+
+        private void GenerarCeldasCombustible()
+        {
+            int cantidadCeldas = random.Next(5, 11); // Generar entre 5 y 10 celdas de combustible
+            for (int i = 0; i < cantidadCeldas; i++)
+            {
+                int x = random.Next(0, grid.Width);
+                int y = random.Next(0, grid.Height);
+                celdasCombustible.Add(new Nodo(x, y));
+            }
         }
     }
 }

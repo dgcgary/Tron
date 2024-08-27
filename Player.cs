@@ -2,74 +2,91 @@
 
 namespace Tron
 {
-    public enum Direccion
-    {
-        Arriba,
-        Abajo,
-        Izquierda,
-        Derecha
-    }
-
     public class Player
     {
         public Nodo Cabeza { get; private set; }
-        public int Width { get; private set; }
-        public int Height { get; private set; }
-        public int Velocidad { get; private set; }
-        public Direccion DireccionActual { get; private set; }
-        private Queue<Nodo> estela; // Cola para manejar la estela
-        public const int LongitudEstela = 9; // Longitud de la estela
+        public double Combustible { get; private set; }
+        private int velocidad;
+        private Direccion direccion;
+        private Queue<Nodo> historialPosiciones;
+        private const int maxEstela = 30;
+        private const double maxCombustible = 100; // Máximo combustible permitido
+        public bool ColisionaCon(Nodo nodo)
+        {
+            return Cabeza.X == nodo.X && Cabeza.Y == nodo.Y;
+        }
+
 
         public Player(int x, int y, int width, int height, int velocidad)
         {
             this.Cabeza = new Nodo(x, y);
-            this.Width = width;
-            this.Height = height;
-            this.Velocidad = velocidad;
-            this.DireccionActual = Direccion.Derecha; // Dirección inicial
-            this.estela = new Queue<Nodo>();
+            this.velocidad = velocidad;
+            this.direccion = Direccion.Derecha;
+            this.Combustible = maxCombustible;
+            this.historialPosiciones = new Queue<Nodo>();
         }
 
         public void CambiarDireccion(Direccion nuevaDireccion)
         {
-            this.DireccionActual = nuevaDireccion;
+            this.direccion = nuevaDireccion;
         }
 
-        public void Mover()
+        public bool Mover(int gridWidth, int gridHeight)
         {
-            int nuevoX = Cabeza.X;
-            int nuevoY = Cabeza.Y;
+            // Guardar la posición actual en el historial
+            historialPosiciones.Enqueue(new Nodo(Cabeza.X, Cabeza.Y));
 
-            switch (DireccionActual)
+            // Limitar el tamaño del historial
+            if (historialPosiciones.Count > maxEstela)
+            {
+                historialPosiciones.Dequeue();
+            }
+
+            // Mover la cabeza del jugador
+            switch (direccion)
             {
                 case Direccion.Arriba:
-                    nuevoY -= 1;
+                    if (Cabeza.Y > 0) Cabeza.Y -= 1;
+                    else return true;
                     break;
                 case Direccion.Abajo:
-                    nuevoY += 1;
+                    if (Cabeza.Y < gridHeight - 1) Cabeza.Y += 1;
+                    else return true;
                     break;
                 case Direccion.Izquierda:
-                    nuevoX -= 1;
+                    if (Cabeza.X > 0) Cabeza.X -= 1;
+                    else return true;
                     break;
                 case Direccion.Derecha:
-                    nuevoX += 1;
+                    if (Cabeza.X < gridWidth - 1) Cabeza.X += 1;
+                    else return true;
                     break;
             }
 
-            Nodo nuevoNodo = new Nodo(nuevoX, nuevoY);
-            nuevoNodo.Siguiente = Cabeza;
-            Cabeza = nuevoNodo;
+            return false;
+        }
 
-            estela.Enqueue(nuevoNodo);
-            if (estela.Count > LongitudEstela)
+        public void RecargarCombustible(double cantidad)
+        {
+            Combustible += cantidad;
+            if (Combustible > maxCombustible)
             {
-                estela.Dequeue();
+                Combustible = maxCombustible;
             }
         }
 
-        public IEnumerable<Nodo> GetEstela()
+        public void ReducirCombustible(double cantidad)
         {
-            return estela;
+            Combustible -= cantidad;
+            if (Combustible < 0)
+            {
+                Combustible = 0;
+            }
+        }
+
+        public IEnumerable<Nodo> ObtenerHistorialPosiciones()
+        {
+            return historialPosiciones;
         }
     }
 }

@@ -8,4 +8,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="gasolina.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="gasolina.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

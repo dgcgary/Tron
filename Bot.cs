@@ -1,77 +1,81 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Tron
 {
-    public class Bot : Player
+    public class Bot
     {
+        public Nodo Cabeza { get; private set; }
+        private int velocidad;
+        private Direccion direccion;
         private Random random;
-        private int tiempoCambioDireccion;
-        private int tiempoTranscurrido;
+        private Queue<Nodo> historialPosiciones;
+        private const int maxEstela = 3;
+        public bool ColisionaCon(Nodo nodo)
+{
+    return Cabeza.X == nodo.X && Cabeza.Y == nodo.Y;
+}
 
-        public Bot(int x, int y, int width, int height, int velocidad) : base(x, y, width, height, velocidad)
+        public Bot(int x, int y, int width, int height, int velocidad)
         {
-            random = new Random();
-            tiempoCambioDireccion = 1000; // Cambiar dirección cada 1 segundo (en milisegundos)
-            tiempoTranscurrido = 0;
+            this.Cabeza = new Nodo(x, y);
+            this.velocidad = velocidad;
+            this.direccion = Direccion.Derecha;
+            this.random = new Random();
+            this.historialPosiciones = new Queue<Nodo>();
         }
 
-        public void MoverAleatorio(int screenWidth, int screenHeight, int intervalo)
+        public void MoverAleatorio(int gridWidth, int gridHeight, int intervalo)
         {
-            tiempoTranscurrido += intervalo;
+            // Guardar la posición actual en el historial
+            historialPosiciones.Enqueue(new Nodo(Cabeza.X, Cabeza.Y));
 
-            if (tiempoTranscurrido >= tiempoCambioDireccion)
+            // Limitar el tamaño del historial
+            if (historialPosiciones.Count > maxEstela)
             {
-                CambiarDireccionAleatoria();
-                tiempoTranscurrido = 0;
+                historialPosiciones.Dequeue();
             }
 
-            // Mover el bot
-            Mover();
-
-            // Verificar límites de la pantalla y cambiar dirección si es necesario
-            if (Cabeza.X < 0)
+            // Mover la cabeza del bot
+            switch (direccion)
             {
-                CambiarDireccion(Direccion.Derecha);
-            }
-            else if (Cabeza.X >= screenWidth / Width)
-            {
-                CambiarDireccion(Direccion.Izquierda);
-            }
-            else if (Cabeza.Y < 0)
-            {
-                CambiarDireccion(Direccion.Abajo);
-            }
-            else if (Cabeza.Y >= screenHeight / Height)
-            {
-                CambiarDireccion(Direccion.Arriba);
+                case Direccion.Arriba:
+                    if (Cabeza.Y > 0) Cabeza.Y -= 1;
+                    break;
+                case Direccion.Abajo:
+                    if (Cabeza.Y < gridHeight - 1) Cabeza.Y += 1;
+                    break;
+                case Direccion.Izquierda:
+                    if (Cabeza.X > 0) Cabeza.X -= 1;
+                    break;
+                case Direccion.Derecha:
+                    if (Cabeza.X < gridWidth - 1) Cabeza.X += 1;
+                    break;
             }
         }
 
-        private void CambiarDireccionAleatoria()
+        public void CambiarDireccionAleatoria()
         {
-            Direccion nuevaDireccion;
-            do
+            switch (random.Next(4))
             {
-                int direccionAleatoria = random.Next(0, 4);
-                nuevaDireccion = direccionAleatoria switch
-                {
-                    0 => Direccion.Arriba,
-                    1 => Direccion.Abajo,
-                    2 => Direccion.Izquierda,
-                    3 => Direccion.Derecha,
-                    _ => Direccion.Arriba
-                };
-            } while (EsDireccionOpuesta(nuevaDireccion));
-
-            CambiarDireccion(nuevaDireccion);
+                case 0:
+                    direccion = Direccion.Arriba;
+                    break;
+                case 1:
+                    direccion = Direccion.Abajo;
+                    break;
+                case 2:
+                    direccion = Direccion.Izquierda;
+                    break;
+                case 3:
+                    direccion = Direccion.Derecha;
+                    break;
+            }
         }
 
-        private bool EsDireccionOpuesta(Direccion nuevaDireccion)
+        public IEnumerable<Nodo> GetEstela()
         {
-            return (DireccionActual == Direccion.Arriba && nuevaDireccion == Direccion.Abajo) ||
-                   (DireccionActual == Direccion.Abajo && nuevaDireccion == Direccion.Arriba) ||
-                   (DireccionActual == Direccion.Izquierda && nuevaDireccion == Direccion.Derecha) ||
-                   (DireccionActual == Direccion.Derecha && nuevaDireccion == Direccion.Izquierda);
+            return historialPosiciones;
         }
     }
 }
