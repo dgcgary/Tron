@@ -12,9 +12,16 @@ namespace Tron
         private Queue<Nodo> historialPosiciones;
         private const int maxEstela = 3;
         public bool ColisionaCon(Nodo nodo)
-{
-    return Cabeza.X == nodo.X && Cabeza.Y == nodo.Y;
-}
+        {
+            foreach (var posicion in historialPosiciones)
+            {
+                if (posicion.X == nodo.X && posicion.Y == nodo.Y)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         public Bot(int x, int y, int width, int height, int velocidad)
         {
@@ -77,5 +84,20 @@ namespace Tron
         {
             return historialPosiciones;
         }
+
+        public void AumentarEstela(int valor)
+        {
+            if (historialPosiciones.Count > 0)
+            {
+                Nodo ultimaPosicion = historialPosiciones.ToArray()[historialPosiciones.Count - 1];
+
+                for (int i = 0; i < valor; i++)
+                {
+                    historialPosiciones.Enqueue(new Nodo(ultimaPosicion.X, ultimaPosicion.Y));
+
+                }
+            }
+        }
+
     }
 }

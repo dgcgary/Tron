@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace Tron
 {
@@ -16,20 +17,23 @@ namespace Tron
         private Label lblCombustible; // Label para mostrar el combustible
         private List<Nodo> celdasCombustible; // Lista de celdas de combustible
         private Image imagenCombustible; // Imagen de la celda de combustible
+        private List<GrowItem> growItems = new List<GrowItem>();
 
         public Form1()
         {
             InitializeComponent();
+            growItems = new List<GrowItem>();        
             random = new Random();
             int velocidadJugador = random.Next(1, 11); // Velocidad aleatoria entre 1 y 10 para el jugador
             int tileSize = 40; // Define el tamaño de los cuadros a 40x40
             int gridWidth = 1920 / tileSize;
             int gridHeight = 1080 / tileSize;
             this.jugador = new Player(gridWidth / 2, gridHeight / 2, tileSize, tileSize, velocidadJugador);
-            this.grid = new Grid(gridWidth, gridHeight, tileSize); // Ajusta el tamaño de la cuadrícula según sea necesario
+            grid = new Grid(gridWidth, gridHeight, tileSize);
             this.DoubleBuffered = true;
             this.KeyDown += new KeyEventHandler(Form1_KeyDown);
             this.Paint += new PaintEventHandler(Form1_Paint);
+            GenerarGrowItems();
 
             // Crear bots
             bots = new List<Bot>();
@@ -89,6 +93,22 @@ namespace Tron
             }
         }
 
+        private void GenerarGrowItems()
+        {
+            int cantidadItems = random.Next(5, 11); // Generar entre 5 y 10 ítems de crecimiento
+            for (int i = 0; i < cantidadItems; i++)
+            {
+                int x = random.Next(0, grid.Width);
+                int y = random.Next(0, grid.Height);
+                int valor = random.Next(1, 11); // Valor aleatorio entre 1 y 10
+                growItems.Add(new GrowItem(x, y, valor));
+            }
+        }
+
+
+
+
+
         private void Form1_Paint(object? sender, PaintEventArgs e)
         {
             grid.DrawGrid(e.Graphics);
@@ -103,6 +123,12 @@ namespace Tron
             foreach (var celda in celdasCombustible)
             {
                 e.Graphics.DrawImage(imagenCombustible, celda.X * grid.TileSize, celda.Y * grid.TileSize, grid.TileSize, grid.TileSize);
+            }
+
+            // Dibujar ítems de crecimiento
+            foreach (var growItem in growItems)
+            {
+                growItem.Draw(e.Graphics, grid.TileSize);
             }
         }
 
@@ -233,7 +259,32 @@ namespace Tron
 
             // Actualizar el Label del combustible
             lblCombustible.Text = $"Combustible: {jugador.Combustible:F1}";
+
+            // Verificar colisión con ítems de crecimiento
+            for (int i = growItems.Count - 1; i >= 0; i--)
+            {
+                if (jugador.Cabeza.X == growItems[i].Posicion.X && jugador.Cabeza.Y == growItems[i].Posicion.Y)
+                {
+                    jugador.AumentarEstela(growItems[i].Valor);
+                    growItems.RemoveAt(i);
+                }
+            }
+
+            // Verificar colisión de bots con ítems de crecimiento
+            for (int i = growItems.Count - 1; i >= 0; i--)
+            {
+                foreach (var bot in bots)
+                {
+                    if (bot.Cabeza.X == growItems[i].Posicion.X && bot.Cabeza.Y == growItems[i].Posicion.Y)
+                    {
+                        bot.AumentarEstela(growItems[i].Valor);
+                        growItems.RemoveAt(i);
+                        break; // Salir del bucle de bots para evitar modificar la lista mientras se itera
+                    }
+                }
+            }
         }
+
 
 
 
@@ -255,6 +306,11 @@ namespace Tron
                 int y = random.Next(0, grid.Height);
                 celdasCombustible.Add(new Nodo(x, y));
             }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

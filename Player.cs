@@ -9,13 +9,13 @@ namespace Tron
         private int velocidad;
         private Direccion direccion;
         private Queue<Nodo> historialPosiciones;
-        private const int maxEstela = 30;
+        private const int maxEstela = 3;
         private const double maxCombustible = 100; // Máximo combustible permitido
+
         public bool ColisionaCon(Nodo nodo)
         {
             return Cabeza.X == nodo.X && Cabeza.Y == nodo.Y;
         }
-
 
         public Player(int x, int y, int width, int height, int velocidad)
         {
@@ -87,6 +87,18 @@ namespace Tron
         public IEnumerable<Nodo> ObtenerHistorialPosiciones()
         {
             return historialPosiciones;
+        }
+
+        public void AumentarEstela(int valor)
+        {
+            if (historialPosiciones.Count > 0)
+            {
+                Nodo ultimaPosicion = historialPosiciones.ToArray()[historialPosiciones.Count - 1];
+                for (int i = 0; i < valor; i++)
+                {
+                    historialPosiciones.Enqueue(new Nodo(ultimaPosicion.X, ultimaPosicion.Y));
+                }
+            }
         }
     }
 }
