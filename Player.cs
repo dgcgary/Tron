@@ -5,7 +5,8 @@ namespace Tron
     public class Player
     {
         public Nodo Cabeza { get; private set; }
-        public double Combustible { get; private set; }
+        public double Combustible { get; set; }
+        public double CombustibleMaximo => maxCombustible; // Agregar esta propiedad
         private int velocidad;
         private Direccion direccion;
         private Queue<Nodo> historialPosiciones;
@@ -84,6 +85,11 @@ namespace Tron
             }
         }
 
+        public void Crecer()
+        {
+            AumentarEstela(1); // Aumentar la estela en 1
+        }
+
         public IEnumerable<Nodo> ObtenerHistorialPosiciones()
         {
             return historialPosiciones;
@@ -100,5 +106,7 @@ namespace Tron
                 }
             }
         }
+
+
     }
 }

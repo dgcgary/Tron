@@ -21,6 +21,9 @@ namespace Tron
         private Image imagenGrowItem;
         private List<Nodo> bombaItems;
         private Image imagenBombaItem;
+        private Queue<Nodo> itemQueue; // Cola para los ítems
+        private System.Windows.Forms.Timer itemTimer; // Timer para aplicar ítems con delay
+
 
 
         public Form1()
@@ -33,6 +36,32 @@ namespace Tron
             int gridHeight = 1080 / tileSize;
             grid = new Grid(gridWidth, gridHeight, tileSize);
 
+            // Inicializar la lista de celdas de crecimiento de estela
+            growItems = new List<Nodo>();
+            GenerarGrowItems();
+            string rutaImagenGrowItem = System.IO.Path.Combine(Application.StartupPath, "grow.png");
+            imagenGrowItem = Image.FromFile(rutaImagenGrowItem);
+
+            // Inicializar la lista de ítems de bombas
+            bombaItems = new List<Nodo>();
+            GenerarBombaItems();
+            string rutaImagenBombaItem = System.IO.Path.Combine(Application.StartupPath, "bomba.png");
+            imagenBombaItem = Image.FromFile(rutaImagenBombaItem);
+
+            // Inicializar la lista de celdas de combustible
+            celdasCombustible = new List<Nodo>();
+            GenerarCeldasCombustible();
+            string rutaImagenCombustible = System.IO.Path.Combine(Application.StartupPath, "gasolina.png");
+            imagenCombustible = Image.FromFile(rutaImagenCombustible);
+
+            // Inicializar la cola de ítems
+            itemQueue = new Queue<Nodo>();
+
+            // Configurar el Timer para aplicar ítems con delay
+            itemTimer = new System.Windows.Forms.Timer();
+            itemTimer.Interval = 1000; // 1 segundo
+            itemTimer.Tick += new EventHandler(ItemTimer_Tick);
+            itemTimer.Start();
 
             int velocidadJugador = random.Next(1, 11); // Velocidad aleatoria entre 1 y 10 para el jugador
             this.jugador = new Player(gridWidth / 2, gridHeight / 2, tileSize, tileSize, velocidadJugador);
@@ -51,7 +80,7 @@ namespace Tron
 
             // Configurar el Timer para el movimiento
             timer = new System.Windows.Forms.Timer();
-            timer.Interval = 100; // Ajusta el intervalo a 20 ms para hacer que las motos se muevan más suavemente
+            timer.Interval = 100; // Ajusta el intervalo a 100 ms para hacer que las motos se muevan más suavemente
             timer.Tick += new EventHandler(Timer_Tick);
             timer.Start();
 
@@ -71,25 +100,6 @@ namespace Tron
             lblCombustible.Location = new Point(10, 10);
             lblCombustible.Font = new Font("Arial", 16, FontStyle.Bold);
             this.Controls.Add(lblCombustible);
-
-            // Inicializar la lista de celdas de combustible
-            celdasCombustible = new List<Nodo>();
-            GenerarCeldasCombustible();
-            string rutaImagenCombustible = System.IO.Path.Combine(Application.StartupPath, "gasolina.png");
-            imagenCombustible = Image.FromFile(rutaImagenCombustible);
-
-            // Inicializar la lista de celdas de crecimiento de estela
-            growItems = new List<Nodo>();
-            GenerarGrowItems();
-            string rutaImagenGrowItem = System.IO.Path.Combine(Application.StartupPath, "grow.png");
-            imagenGrowItem = Image.FromFile(rutaImagenGrowItem);
-
-            // Inicializar la lista de ítems de las bombas
-            bombaItems = new List<Nodo>();
-            GenerarBombaItems();
-            string rutaImagenEliminarItem = System.IO.Path.Combine(Application.StartupPath, "bomba.png");
-            imagenBombaItem = Image.FromFile(rutaImagenEliminarItem);
-
         }
 
 
@@ -360,6 +370,39 @@ namespace Tron
                 int x = random.Next(0, grid.Width);
                 int y = random.Next(0, grid.Height);
                 bombaItems.Add(new Nodo(x, y));
+            }
+        }
+
+        private void ItemTimer_Tick(object? sender, EventArgs e)
+        {
+            if (itemQueue.Count > 0)
+            {
+                Nodo item = itemQueue.Dequeue();
+
+                // Priorizar celdas de combustible
+                if (celdasCombustible.Contains(item))
+                {
+                    if (jugador.Combustible < jugador.CombustibleMaximo)
+                    {
+                        jugador.Combustible += 10; // Incrementar el combustible
+                        celdasCombustible.Remove(item);
+                    }
+                    else
+                    {
+                        itemQueue.Enqueue(item); // Reinsertar en la cola si el combustible está lleno
+                    }
+                }
+                else if (growItems.Contains(item))
+                {
+                    jugador.Crecer(); // Aplicar ítem de crecimiento
+                    growItems.Remove(item);
+                }
+                else if (bombaItems.Contains(item))
+                {
+                    timer.Stop();
+                    MessageBox.Show("¡El jugador ha tocado una bomba y ha sido eliminado!");
+                    return;
+                }
             }
         }
 
