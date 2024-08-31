@@ -17,23 +17,28 @@ namespace Tron
         private Label lblCombustible; // Label para mostrar el combustible
         private List<Nodo> celdasCombustible; // Lista de celdas de combustible
         private Image imagenCombustible; // Imagen de la celda de combustible
-        private List<GrowItem> growItems = new List<GrowItem>();
+        private List<Nodo> growItems;
+        private Image imagenGrowItem;
+        private List<Nodo> bombaItems;
+        private Image imagenBombaItem;
+
 
         public Form1()
         {
             InitializeComponent();
-            growItems = new List<GrowItem>();        
             random = new Random();
-            int velocidadJugador = random.Next(1, 11); // Velocidad aleatoria entre 1 y 10 para el jugador
+
             int tileSize = 40; // Define el tamaño de los cuadros a 40x40
             int gridWidth = 1920 / tileSize;
             int gridHeight = 1080 / tileSize;
-            this.jugador = new Player(gridWidth / 2, gridHeight / 2, tileSize, tileSize, velocidadJugador);
             grid = new Grid(gridWidth, gridHeight, tileSize);
+
+
+            int velocidadJugador = random.Next(1, 11); // Velocidad aleatoria entre 1 y 10 para el jugador
+            this.jugador = new Player(gridWidth / 2, gridHeight / 2, tileSize, tileSize, velocidadJugador);
             this.DoubleBuffered = true;
             this.KeyDown += new KeyEventHandler(Form1_KeyDown);
             this.Paint += new PaintEventHandler(Form1_Paint);
-            GenerarGrowItems();
 
             // Crear bots
             bots = new List<Bot>();
@@ -70,9 +75,26 @@ namespace Tron
             // Inicializar la lista de celdas de combustible
             celdasCombustible = new List<Nodo>();
             GenerarCeldasCombustible();
-            string rutaImagen = System.IO.Path.Combine(Application.StartupPath, "gasolina.png");
-            imagenCombustible = Image.FromFile(rutaImagen);
+            string rutaImagenCombustible = System.IO.Path.Combine(Application.StartupPath, "gasolina.png");
+            imagenCombustible = Image.FromFile(rutaImagenCombustible);
+
+            // Inicializar la lista de celdas de crecimiento de estela
+            growItems = new List<Nodo>();
+            GenerarGrowItems();
+            string rutaImagenGrowItem = System.IO.Path.Combine(Application.StartupPath, "grow.png");
+            imagenGrowItem = Image.FromFile(rutaImagenGrowItem);
+
+            // Inicializar la lista de ítems de las bombas
+            bombaItems = new List<Nodo>();
+            GenerarBombaItems();
+            string rutaImagenEliminarItem = System.IO.Path.Combine(Application.StartupPath, "bomba.png");
+            imagenBombaItem = Image.FromFile(rutaImagenEliminarItem);
+
         }
+
+
+
+
 
         private void Form1_KeyDown(object? sender, KeyEventArgs e)
         {
@@ -92,21 +114,6 @@ namespace Tron
                     break;
             }
         }
-
-        private void GenerarGrowItems()
-        {
-            int cantidadItems = random.Next(5, 11); // Generar entre 5 y 10 ítems de crecimiento
-            for (int i = 0; i < cantidadItems; i++)
-            {
-                int x = random.Next(0, grid.Width);
-                int y = random.Next(0, grid.Height);
-                int valor = random.Next(1, 11); // Valor aleatorio entre 1 y 10
-                growItems.Add(new GrowItem(x, y, valor));
-            }
-        }
-
-
-
 
 
         private void Form1_Paint(object? sender, PaintEventArgs e)
@@ -128,9 +135,16 @@ namespace Tron
             // Dibujar ítems de crecimiento
             foreach (var growItem in growItems)
             {
-                growItem.Draw(e.Graphics, grid.TileSize);
+                e.Graphics.DrawImage(imagenGrowItem, growItem.X * grid.TileSize, growItem.Y * grid.TileSize, grid.TileSize, grid.TileSize);
+            }
+
+            // Dibujar ítems de eliminación
+            foreach (var eliminarItem in bombaItems)
+            {
+                e.Graphics.DrawImage(imagenBombaItem, eliminarItem.X * grid.TileSize, eliminarItem.Y * grid.TileSize, grid.TileSize, grid.TileSize);
             }
         }
+
 
 
 
@@ -260,12 +274,11 @@ namespace Tron
             // Actualizar el Label del combustible
             lblCombustible.Text = $"Combustible: {jugador.Combustible:F1}";
 
-            // Verificar colisión con ítems de crecimiento
             for (int i = growItems.Count - 1; i >= 0; i--)
             {
-                if (jugador.Cabeza.X == growItems[i].Posicion.X && jugador.Cabeza.Y == growItems[i].Posicion.Y)
+                if (jugador.Cabeza.X == growItems[i].X && jugador.Cabeza.Y == growItems[i].Y)
                 {
-                    jugador.AumentarEstela(growItems[i].Valor);
+                    jugador.AumentarEstela(random.Next(1, 11)); // Valor aleatorio entre 1 y 10
                     growItems.RemoveAt(i);
                 }
             }
@@ -275,11 +288,31 @@ namespace Tron
             {
                 foreach (var bot in bots)
                 {
-                    if (bot.Cabeza.X == growItems[i].Posicion.X && bot.Cabeza.Y == growItems[i].Posicion.Y)
+                    if (bot.Cabeza.X == growItems[i].X && bot.Cabeza.Y == growItems[i].Y)
                     {
-                        bot.AumentarEstela(growItems[i].Valor);
+                        bot.AumentarEstela(random.Next(1, 11)); // Valor aleatorio entre 1 y 10
                         growItems.RemoveAt(i);
                         break; // Salir del bucle de bots para evitar modificar la lista mientras se itera
+                    }
+                }
+            }
+
+            for (int i = bombaItems.Count - 1; i >= 0; i--)
+            {
+                if (jugador.Cabeza.X == bombaItems[i].X && jugador.Cabeza.Y == bombaItems[i].Y)
+                {
+                    timer.Stop();
+                    MessageBox.Show("¡El jugador ha explotado!");
+                    return;
+                }
+
+                foreach (var bot in bots)
+                {
+                    if (bot.Cabeza.X == bombaItems[i].X && bot.Cabeza.Y == bombaItems[i].Y)
+                    {
+                        bots.Remove(bot);
+                        bombaItems.RemoveAt(i);
+                        break;
                     }
                 }
             }
@@ -305,6 +338,28 @@ namespace Tron
                 int x = random.Next(0, grid.Width);
                 int y = random.Next(0, grid.Height);
                 celdasCombustible.Add(new Nodo(x, y));
+            }
+        }
+
+        private void GenerarGrowItems()
+        {
+            int cantidadItems = random.Next(5, 11); // Generar entre 5 y 10 ítems de crecimiento
+            for (int i = 0; i < cantidadItems; i++)
+            {
+                int x = random.Next(0, grid.Width);
+                int y = random.Next(0, grid.Height);
+                growItems.Add(new Nodo(x, y));
+            }
+        }
+
+        private void GenerarBombaItems()
+        {
+            int cantidadItems = random.Next(5, 11); // Generar entre 5 y 10 ítems de eliminación
+            for (int i = 0; i < cantidadItems; i++)
+            {
+                int x = random.Next(0, grid.Width);
+                int y = random.Next(0, grid.Height);
+                bombaItems.Add(new Nodo(x, y));
             }
         }
 
