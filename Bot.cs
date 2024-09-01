@@ -10,7 +10,7 @@ namespace Tron
         private Direccion direccion;
         private Random random;
         private Queue<Nodo> historialPosiciones;
-        private const int maxEstela = 3;
+        private const int maxEstela = 10;
         public bool ColisionaCon(Nodo nodo)
         {
             foreach (var posicion in historialPosiciones)

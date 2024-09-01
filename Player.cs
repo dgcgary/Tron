@@ -12,11 +12,10 @@ namespace Tron
         private Queue<Nodo> historialPosiciones;
         private const int maxEstela = 3;
         private const double maxCombustible = 100; // Máximo combustible permitido
+        public Stack<ShieldPowerUp> ShieldStack { get; private set; }
+        public bool IsInvincible { get; private set; }
+        private int invincibilityTime;
 
-        public bool ColisionaCon(Nodo nodo)
-        {
-            return Cabeza.X == nodo.X && Cabeza.Y == nodo.Y;
-        }
 
         public Player(int x, int y, int width, int height, int velocidad)
         {
@@ -25,6 +24,41 @@ namespace Tron
             this.direccion = Direccion.Derecha;
             this.Combustible = maxCombustible;
             this.historialPosiciones = new Queue<Nodo>();
+            this.ShieldStack = new Stack<ShieldPowerUp>();
+            this.IsInvincible = false;
+            this.invincibilityTime = 0;
+        }
+
+        public bool EsInvulnerable()
+        {
+            return IsInvincible;
+        }
+
+        public void ActivateShield()
+        {
+            if (ShieldStack.Count > 0)
+            {
+                ShieldStack.Pop();
+                IsInvincible = true;
+                invincibilityTime = 100; // Duración de la invulnerabilidad
+            }
+        }
+
+        public void Update()
+        {
+            if (IsInvincible)
+            {
+                invincibilityTime--;
+                if (invincibilityTime <= 0)
+                {
+                    IsInvincible = false;
+                }
+            }
+        }
+
+        public bool ColisionaCon(Nodo nodo)
+        {
+            return Cabeza.X == nodo.X && Cabeza.Y == nodo.Y;
         }
 
         public void CambiarDireccion(Direccion nuevaDireccion)

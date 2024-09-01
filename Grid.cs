@@ -7,12 +7,15 @@ namespace Tron
         public int Width { get; }
         public int Height { get; }
         public int TileSize { get; }
+        public List<Nodo> Estelas { get; } 
+
 
         public Grid(int width, int height, int tileSize)
         {
             this.Width = width;
             this.Height = height;
             this.TileSize = tileSize;
+            Estelas = new List<Nodo>(); 
         }
 
         public void DrawGrid(Graphics g)

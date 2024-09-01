@@ -23,14 +23,15 @@ namespace Tron
         private Image imagenBombaItem;
         private Queue<Nodo> itemQueue; // Cola para los ítems
         private System.Windows.Forms.Timer itemTimer; // Timer para aplicar ítems con delay
-
-
+        private List<ShieldPowerUp> shieldPowerUps;
+        private Image imagenShield;
+        private Label lblShieldCount;
 
         public Form1()
         {
             InitializeComponent();
             random = new Random();
-
+            // Inicializar el grid
             int tileSize = 40; // Define el tamaño de los cuadros a 40x40
             int gridWidth = 1920 / tileSize;
             int gridHeight = 1080 / tileSize;
@@ -64,7 +65,24 @@ namespace Tron
             itemTimer.Start();
 
             int velocidadJugador = random.Next(1, 11); // Velocidad aleatoria entre 1 y 10 para el jugador
-            this.jugador = new Player(gridWidth / 2, gridHeight / 2, tileSize, tileSize, velocidadJugador);
+            jugador = new Player(gridWidth / 2, gridHeight / 2, tileSize, tileSize, velocidadJugador);
+
+            // Inicializar el poder de escudo
+            shieldPowerUps = new List<ShieldPowerUp>();
+            GenerateShieldPowerUps();
+            string rutaImagenShield = System.IO.Path.Combine(Application.StartupPath, "shield.png");
+            imagenShield = Image.FromFile(rutaImagenShield);
+
+            // Crear y configurar el Label para mostrar el conteo de escudos
+            // En el constructor del formulario o en el método de inicialización
+            lblShieldCount = new Label();
+            lblShieldCount.Location = new Point(10, 50); // Ajusta la posición según sea necesario
+            lblShieldCount.Size = new Size(200, 20);
+            lblShieldCount.ForeColor = Color.White;
+            this.Controls.Add(lblShieldCount);
+
+            UpdateShieldCount();
+
             this.DoubleBuffered = true;
             this.KeyDown += new KeyEventHandler(Form1_KeyDown);
             this.Paint += new PaintEventHandler(Form1_Paint);
@@ -103,11 +121,19 @@ namespace Tron
         }
 
 
-
+        private void UpdateShieldCount()
+        {
+            lblShieldCount.Text = $"Poderes de escudo: {jugador.ShieldStack.Count}";
+        }
 
 
         private void Form1_KeyDown(object? sender, KeyEventArgs e)
         {
+            if (e.KeyCode == Keys.Space)
+            {
+                jugador.ActivateShield();
+                UpdateShieldCount();
+            }
             switch (e.KeyCode)
             {
                 case Keys.Up:
@@ -153,6 +179,12 @@ namespace Tron
             {
                 e.Graphics.DrawImage(imagenBombaItem, eliminarItem.X * grid.TileSize, eliminarItem.Y * grid.TileSize, grid.TileSize, grid.TileSize);
             }
+
+            // Dibujar poder de escudo
+            foreach (var shield in shieldPowerUps)
+            {
+                e.Graphics.DrawImage(imagenShield, shield.X * grid.TileSize, shield.Y * grid.TileSize, grid.TileSize, grid.TileSize);
+            }
         }
 
 
@@ -160,6 +192,9 @@ namespace Tron
 
         private void Timer_Tick(object? sender, EventArgs e)
         {
+            // Actualizar el estado del jugador
+            jugador.Update();
+
             // Invalidate las posiciones de la estela del jugador antes de moverlo
             foreach (var posicion in jugador.ObtenerHistorialPosiciones())
             {
@@ -202,31 +237,37 @@ namespace Tron
                 var nuevaPosicionBot = new Rectangle(bot.Cabeza.X * grid.TileSize, bot.Cabeza.Y * grid.TileSize, grid.TileSize, grid.TileSize);
                 this.Invalidate(nuevaPosicionBot);
 
-                // Verificar colisiones entre el jugador y los bots
-                if (jugador.ColisionaCon(bot.Cabeza) || bot.ColisionaCon(jugador.Cabeza))
+                // Verificar colisiones entre el jugador y los bots solo si el escudo no está activo
+                if (!jugador.EsInvulnerable() && jugador.ColisionaCon(bot.Cabeza))
                 {
                     timer.Stop();
                     MessageBox.Show("¡Colisión! Ambos jugadores han muerto.");
                     return;
                 }
 
-                // Verificar colisiones con las estelas
+                // Verificar colisiones con las estelas del jugador solo si el bot toca la estela con la cabeza
                 foreach (var posicion in jugador.ObtenerHistorialPosiciones())
                 {
-                    if (bot.ColisionaCon(posicion))
+                    if (bot.Cabeza.X == posicion.X && bot.Cabeza.Y == posicion.Y)
                     {
                         botsAEliminar.Add(bot);
                         break;
                     }
                 }
 
+                // Verificar colisiones con las estelas de otros bots
                 foreach (var otroBot in bots)
                 {
-                    if (bot != otroBot && bot.ColisionaCon(otroBot.Cabeza))
+                    if (bot != otroBot)
                     {
-                        botsAEliminar.Add(bot);
-                        botsAEliminar.Add(otroBot);
-                        break;
+                        foreach (var posicion in otroBot.GetEstela())
+                        {
+                            if (bot.Cabeza.X == posicion.X && bot.Cabeza.Y == posicion.Y)
+                            {
+                                botsAEliminar.Add(bot);
+                                break;
+                            }
+                        }
                     }
                 }
             }
@@ -237,22 +278,25 @@ namespace Tron
                 bots.Remove(bot);
             }
 
-            // Verificar colisiones con las estelas de los bots
-            foreach (var bot in bots)
+            // Verificar colisiones con las estelas de los bots solo si el escudo no está activo
+            if (!jugador.EsInvulnerable())
             {
-                foreach (var posicion in bot.GetEstela())
+                foreach (var bot in bots)
                 {
-                    if (jugador.ColisionaCon(posicion))
+                    foreach (var posicion in bot.GetEstela())
                     {
-                        timer.Stop();
-                        MessageBox.Show("¡Colisión con la estela! El jugador ha muerto.");
-                        return;
+                        if (jugador.Cabeza.X == posicion.X && jugador.Cabeza.Y == posicion.Y)
+                        {
+                            timer.Stop();
+                            MessageBox.Show("¡Colisión con la estela! El jugador ha muerto.");
+                            return;
+                        }
                     }
                 }
             }
 
             // Verificar si el jugador se ha estrellado
-            if (jugadorEstrellado)
+            if (jugadorEstrellado && !jugador.EsInvulnerable())
             {
                 timer.Stop();
                 MessageBox.Show("El jugador se ha estrellado!");
@@ -307,9 +351,23 @@ namespace Tron
                 }
             }
 
+            // Verificar colisiones con ítems de escudo
+            for (int i = shieldPowerUps.Count - 1; i >= 0; i--)
+            {
+                // Convertir ShieldPowerUp a Nodo antes de pasar a ColisionaCon
+                Nodo nodoShield = new Nodo(shieldPowerUps[i].X, shieldPowerUps[i].Y);
+                if (jugador.ColisionaCon(nodoShield))
+                {
+                    jugador.ShieldStack.Push(shieldPowerUps[i]);
+                    shieldPowerUps.RemoveAt(i);
+                    UpdateShieldCount(); // Asegurarse de actualizar el contador de escudo
+                }
+            }
+
+            // Verificar colisiones con ítems bomba solo si el escudo no está activo
             for (int i = bombaItems.Count - 1; i >= 0; i--)
             {
-                if (jugador.Cabeza.X == bombaItems[i].X && jugador.Cabeza.Y == bombaItems[i].Y)
+                if (!jugador.EsInvulnerable() && jugador.Cabeza.X == bombaItems[i].X && jugador.Cabeza.Y == bombaItems[i].Y)
                 {
                     timer.Stop();
                     MessageBox.Show("¡El jugador ha explotado!");
@@ -327,6 +385,9 @@ namespace Tron
                 }
             }
         }
+
+
+
 
 
 
@@ -406,9 +467,21 @@ namespace Tron
             }
         }
 
+        private void GenerateShieldPowerUps()
+        {
+            int numberOfShields = random.Next(1, 5); // Genera entre 1 y 5 poderes de escudo
+            for (int i = 0; i < numberOfShields; i++)
+            {
+                int x = random.Next(0, grid.Width);
+                int y = random.Next(0, grid.Height);
+                shieldPowerUps.Add(new ShieldPowerUp(random.Next(5, 15), x, y)); // Duración aleatoria
+            }
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
 
         }
+        
     }
 }
