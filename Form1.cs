@@ -1,8 +1,9 @@
-using System;
+ï»¿using System;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Text;
 
 namespace Tron
 {
@@ -13,7 +14,7 @@ namespace Tron
         private Grid grid;
         private Random random;
         private System.Windows.Forms.Timer timer; // Especifica el espacio de nombres correcto
-        private System.Windows.Forms.Timer botDirectionTimer; // Nuevo temporizador para cambiar la dirección de los bots
+        private System.Windows.Forms.Timer botDirectionTimer; // Nuevo temporizador para cambiar la direcciÃ³n de los bots
         private Label lblCombustible; // Label para mostrar el combustible
         private List<Nodo> celdasCombustible; // Lista de celdas de combustible
         private Image imagenCombustible; // Imagen de la celda de combustible
@@ -21,18 +22,25 @@ namespace Tron
         private Image imagenGrowItem;
         private List<Nodo> bombaItems;
         private Image imagenBombaItem;
-        private Queue<Nodo> itemQueue; // Cola para los ítems
-        private System.Windows.Forms.Timer itemTimer; // Timer para aplicar ítems con delay
-        private List<ShieldPowerUp> shieldPowerUps;
+        private Queue<Nodo> itemQueue; // Cola para los items
+        private System.Windows.Forms.Timer itemTimer; // Timer para aplicar items con delay
         private Image imagenShield;
-        private Label lblShieldCount;
+        private Image imagenHyperSpeed;
+        private Label lblVelocidad;
+        private List<PowerUp> powerUps;
+        private Label lblPowerUpCount;
+        private Label lblTopPowerUp;
+
+
+
+
 
         public Form1()
         {
             InitializeComponent();
             random = new Random();
             // Inicializar el grid
-            int tileSize = 40; // Define el tamaño de los cuadros a 40x40
+            int tileSize = 40; // Define el tamaÃ±o de los cuadros a 40x40
             int gridWidth = 1920 / tileSize;
             int gridHeight = 1080 / tileSize;
             grid = new Grid(gridWidth, gridHeight, tileSize);
@@ -43,7 +51,7 @@ namespace Tron
             string rutaImagenGrowItem = System.IO.Path.Combine(Application.StartupPath, "grow.png");
             imagenGrowItem = Image.FromFile(rutaImagenGrowItem);
 
-            // Inicializar la lista de ítems de bombas
+            // Inicializar la lista de items de bombas
             bombaItems = new List<Nodo>();
             GenerarBombaItems();
             string rutaImagenBombaItem = System.IO.Path.Combine(Application.StartupPath, "bomba.png");
@@ -55,33 +63,46 @@ namespace Tron
             string rutaImagenCombustible = System.IO.Path.Combine(Application.StartupPath, "gasolina.png");
             imagenCombustible = Image.FromFile(rutaImagenCombustible);
 
-            // Inicializar la cola de ítems
+            // Inicializar la cola de items
             itemQueue = new Queue<Nodo>();
 
-            // Configurar el Timer para aplicar ítems con delay
+            // Configurar el Timer para aplicar items con delay
             itemTimer = new System.Windows.Forms.Timer();
             itemTimer.Interval = 1000; // 1 segundo
             itemTimer.Tick += new EventHandler(ItemTimer_Tick);
             itemTimer.Start();
 
-            int velocidadJugador = random.Next(1, 11); // Velocidad aleatoria entre 1 y 10 para el jugador
-            jugador = new Player(gridWidth / 2, gridHeight / 2, tileSize, tileSize, velocidadJugador);
 
-            // Inicializar el poder de escudo
-            shieldPowerUps = new List<ShieldPowerUp>();
-            GenerateShieldPowerUps();
+
+            // Inicializar el stack de power-ups
+            powerUps = new List<PowerUp>();
+            GenerarPowerUps();
             string rutaImagenShield = System.IO.Path.Combine(Application.StartupPath, "shield.png");
             imagenShield = Image.FromFile(rutaImagenShield);
+            string rutaImagenHyper = System.IO.Path.Combine(Application.StartupPath, "hyper.png");
+            imagenHyperSpeed = Image.FromFile(rutaImagenHyper);
 
-            // Crear y configurar el Label para mostrar el conteo de escudos
-            // En el constructor del formulario o en el método de inicialización
-            lblShieldCount = new Label();
-            lblShieldCount.Location = new Point(10, 50); // Ajusta la posición según sea necesario
-            lblShieldCount.Size = new Size(200, 20);
-            lblShieldCount.ForeColor = Color.White;
-            this.Controls.Add(lblShieldCount);
 
-            UpdateShieldCount();
+            // Crear y configurar el Label para mostrar el conteo de power-ups
+            lblPowerUpCount = new Label();
+            lblPowerUpCount.Location = new Point(10, 50); // Ajusta la posiciÃ³n segÃºn sea necesario
+            lblPowerUpCount.Size = new Size(200, 20);
+            lblPowerUpCount.Text = "Power-ups: 0";
+            lblPowerUpCount.ForeColor = Color.White;
+            lblPowerUpCount.BackColor = Color.Black;
+            this.Controls.Add(lblPowerUpCount);
+
+            // Crear y configurar el Label para mostrar el power-up en el top del stack
+            lblTopPowerUp = new Label();
+            lblTopPowerUp.Location = new Point(10, 90); // Ajusta la posiciÃ³n segÃºn sea necesario
+            lblTopPowerUp.Size = new Size(200, 20);
+            lblTopPowerUp.Text = "Top Power-Up: None";
+            lblTopPowerUp.ForeColor = Color.White;
+            lblTopPowerUp.BackColor = Color.Black;
+            this.Controls.Add(lblTopPowerUp);
+
+
+
 
             this.DoubleBuffered = true;
             this.KeyDown += new KeyEventHandler(Form1_KeyDown);
@@ -89,22 +110,35 @@ namespace Tron
 
             // Crear bots
             bots = new List<Bot>();
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 5; i++)
             {
-                int botVelocidad = random.Next(1, 11); // Velocidad aleatoria entre 1 y 10 para los bots
-                Bot bot = new Bot(random.Next(0, gridWidth - 1), random.Next(0, gridHeight - 1), tileSize, tileSize, botVelocidad);
-                bots.Add(bot);
+                bots.Add(new Bot(random.Next(0, 20), random.Next(0, 20), 20, 20, random.Next(1, 11)));
             }
 
             // Configurar el Timer para el movimiento
             timer = new System.Windows.Forms.Timer();
-            timer.Interval = 100; // Ajusta el intervalo a 100 ms para hacer que las motos se muevan más suavemente
-            timer.Tick += new EventHandler(Timer_Tick);
+            timer.Interval = 100; // Ajusta el intervalo a 100 ms para hacer que las motos se muevan mÃ¡s suavemente
+            timer.Tick += Timer_Tick;
             timer.Start();
 
-            // Configurar el Timer para cambiar la dirección de los bots
+
+            // Inicializar el jugador
+            jugador = new Player(5, 5, 20, 20, random.Next(1, 11), timer);
+
+
+            //Inicializar el label para el valor de la velocidad
+            lblVelocidad = new Label();
+            lblVelocidad.Location = new Point(10, 110);
+            lblVelocidad.Size = new Size(200, 20);
+            lblVelocidad.ForeColor = Color.White;
+            lblVelocidad.BackColor = Color.Black;
+            lblVelocidad.Text = $"Velocidad: {jugador.Velocidad}";
+            this.Controls.Add(lblVelocidad);
+
+
+            // Configurar el Timer para cambiar la direcciÃ³n de los bots
             botDirectionTimer = new System.Windows.Forms.Timer();
-            botDirectionTimer.Interval = 500; // Cambiar dirección cada 500 ms
+            botDirectionTimer.Interval = 500; // Cambiar direcciÃ³n cada 500 ms
             botDirectionTimer.Tick += new EventHandler(BotDirectionTimer_Tick);
             botDirectionTimer.Start();
 
@@ -121,19 +155,40 @@ namespace Tron
         }
 
 
-        private void UpdateShieldCount()
+        private void UpdatePowerUpCount()
         {
-            lblShieldCount.Text = $"Poderes de escudo: {jugador.ShieldStack.Count}";
+            lblPowerUpCount.Text = $"Power-Ups: {jugador.PowerUpStack.Count}";
+            if (jugador.PowerUpStack.Count > 0)
+            {
+                var topPowerUp = jugador.PowerUpStack.Peek();
+                lblTopPowerUp.Text = $"Top Power-Up: {topPowerUp.GetType().Name}";
+            }
+            else
+            {
+                lblTopPowerUp.Text = "Top Power-Up: None";
+            }
         }
+
+
 
 
         private void Form1_KeyDown(object? sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Space)
+            if (e.KeyCode == Keys.Space && jugador.PowerUpStack.Count > 0)
             {
-                jugador.ActivateShield();
-                UpdateShieldCount();
+                var powerUp = jugador.PowerUpStack.Pop();
+                    if (powerUp is ShieldPowerUp)
+                    {
+                        jugador.ActivateShield();
+                    }
+                    else if (powerUp is HyperSpeedPowerUp)
+                    {
+                        jugador.ActivateHyperSpeed();
+                    }
+                    UpdatePowerUpCount();
             }
+            
+
             switch (e.KeyCode)
             {
                 case Keys.Up:
@@ -168,22 +223,29 @@ namespace Tron
                 e.Graphics.DrawImage(imagenCombustible, celda.X * grid.TileSize, celda.Y * grid.TileSize, grid.TileSize, grid.TileSize);
             }
 
-            // Dibujar ítems de crecimiento
+            // Dibujar items de crecimiento
             foreach (var growItem in growItems)
             {
                 e.Graphics.DrawImage(imagenGrowItem, growItem.X * grid.TileSize, growItem.Y * grid.TileSize, grid.TileSize, grid.TileSize);
             }
 
-            // Dibujar ítems de eliminación
+            // Dibujar items de eliminaciÃ³n
             foreach (var eliminarItem in bombaItems)
             {
                 e.Graphics.DrawImage(imagenBombaItem, eliminarItem.X * grid.TileSize, eliminarItem.Y * grid.TileSize, grid.TileSize, grid.TileSize);
             }
 
-            // Dibujar poder de escudo
-            foreach (var shield in shieldPowerUps)
+            // Dibujar poder de escudo e hipervelocidad
+            foreach (var powerUp in powerUps)
             {
-                e.Graphics.DrawImage(imagenShield, shield.X * grid.TileSize, shield.Y * grid.TileSize, grid.TileSize, grid.TileSize);
+                if (powerUp is ShieldPowerUp)
+                {
+                    e.Graphics.DrawImage(imagenShield, powerUp.X * grid.TileSize, powerUp.Y * grid.TileSize, grid.TileSize, grid.TileSize);
+                }
+                else if (powerUp is HyperSpeedPowerUp)
+                {
+                    e.Graphics.DrawImage(imagenHyperSpeed, powerUp.X * grid.TileSize, powerUp.Y * grid.TileSize, grid.TileSize, grid.TileSize);
+                }
             }
         }
 
@@ -202,15 +264,15 @@ namespace Tron
                 this.Invalidate(rectEstela);
             }
 
-            // Guardar la posición anterior del jugador
+            // Guardar la posiciÃ³n anterior del jugador
             var posicionAnteriorJugador = new Rectangle(jugador.Cabeza.X * grid.TileSize, jugador.Cabeza.Y * grid.TileSize, grid.TileSize, grid.TileSize);
 
             bool jugadorEstrellado = jugador.Mover(grid.Width, grid.Height);
 
-            // Invalidate la posición anterior del jugador
+            // Invalidate la posiciÃ³n anterior del jugador
             this.Invalidate(posicionAnteriorJugador);
 
-            // Invalidate la nueva posición del jugador
+            // Invalidate la nueva posiciÃ³n del jugador
             var nuevaPosicionJugador = new Rectangle(jugador.Cabeza.X * grid.TileSize, jugador.Cabeza.Y * grid.TileSize, grid.TileSize, grid.TileSize);
             this.Invalidate(nuevaPosicionJugador);
 
@@ -225,23 +287,23 @@ namespace Tron
                     this.Invalidate(rectEstelaBot);
                 }
 
-                // Guardar la posición anterior del bot
+                // Guardar la posiciÃ³n anterior del bot
                 var posicionAnteriorBot = new Rectangle(bot.Cabeza.X * grid.TileSize, bot.Cabeza.Y * grid.TileSize, grid.TileSize, grid.TileSize);
 
                 bot.MoverAleatorio(grid.Width, grid.Height, timer.Interval);
 
-                // Invalidate la posición anterior del bot
+                // Invalidate la posiciÃ³n anterior del bot
                 this.Invalidate(posicionAnteriorBot);
 
-                // Invalidate la nueva posición del bot
+                // Invalidate la nueva posiciÃ³n del bot
                 var nuevaPosicionBot = new Rectangle(bot.Cabeza.X * grid.TileSize, bot.Cabeza.Y * grid.TileSize, grid.TileSize, grid.TileSize);
                 this.Invalidate(nuevaPosicionBot);
 
-                // Verificar colisiones entre el jugador y los bots solo si el escudo no está activo
+                // Verificar colisiones entre el jugador y los bots solo si el escudo no estÃ¡ activo
                 if (!jugador.EsInvulnerable() && jugador.ColisionaCon(bot.Cabeza))
                 {
                     timer.Stop();
-                    MessageBox.Show("¡Colisión! Ambos jugadores han muerto.");
+                    MessageBox.Show("Â¡ColisiÃ³n! Ambos jugadores han muerto.");
                     return;
                 }
 
@@ -278,7 +340,7 @@ namespace Tron
                 bots.Remove(bot);
             }
 
-            // Verificar colisiones con las estelas de los bots solo si el escudo no está activo
+            // Verificar colisiones con las estelas de los bots solo si el escudo no estÃ¡ activo
             if (!jugador.EsInvulnerable())
             {
                 foreach (var bot in bots)
@@ -288,7 +350,7 @@ namespace Tron
                         if (jugador.Cabeza.X == posicion.X && jugador.Cabeza.Y == posicion.Y)
                         {
                             timer.Stop();
-                            MessageBox.Show("¡Colisión con la estela! El jugador ha muerto.");
+                            MessageBox.Show("Â¡ColisiÃ³n con la estela! El jugador ha muerto.");
                             return;
                         }
                     }
@@ -307,7 +369,7 @@ namespace Tron
             if (jugador.Combustible <= 0)
             {
                 timer.Stop();
-                MessageBox.Show("La moto se quedó sin combustible!");
+                MessageBox.Show("La moto se quedÃ³ sin combustible!");
                 return;
             }
 
@@ -337,7 +399,7 @@ namespace Tron
                 }
             }
 
-            // Verificar colisión de bots con ítems de crecimiento
+            // Verificar colisiÃ³n de bots con Ã­tems de crecimiento
             for (int i = growItems.Count - 1; i >= 0; i--)
             {
                 foreach (var bot in bots)
@@ -351,26 +413,26 @@ namespace Tron
                 }
             }
 
-            // Verificar colisiones con ítems de escudo
-            for (int i = shieldPowerUps.Count - 1; i >= 0; i--)
+            // Verificar si el jugador recoge un power-up
+            for (int i = powerUps.Count - 1; i >= 0; i--)
             {
-                // Convertir ShieldPowerUp a Nodo antes de pasar a ColisionaCon
-                Nodo nodoShield = new Nodo(shieldPowerUps[i].X, shieldPowerUps[i].Y);
-                if (jugador.ColisionaCon(nodoShield))
+                if (jugador.Cabeza.X == powerUps[i].X && jugador.Cabeza.Y == powerUps[i].Y)
                 {
-                    jugador.ShieldStack.Push(shieldPowerUps[i]);
-                    shieldPowerUps.RemoveAt(i);
-                    UpdateShieldCount(); // Asegurarse de actualizar el contador de escudo
+                    jugador.PowerUpStack.Push(powerUps[i]);
+                    var powerUpPos = new Rectangle(powerUps[i].X * grid.TileSize, powerUps[i].Y * grid.TileSize, grid.TileSize, grid.TileSize);
+                    powerUps.RemoveAt(i);
+                    UpdatePowerUpCount();
+                    this.Invalidate(powerUpPos);
                 }
             }
 
-            // Verificar colisiones con ítems bomba solo si el escudo no está activo
+            // Verificar colisiones con Ã­tems bomba solo si el escudo no estÃ¡ activo
             for (int i = bombaItems.Count - 1; i >= 0; i--)
             {
                 if (!jugador.EsInvulnerable() && jugador.Cabeza.X == bombaItems[i].X && jugador.Cabeza.Y == bombaItems[i].Y)
                 {
                     timer.Stop();
-                    MessageBox.Show("¡El jugador ha explotado!");
+                    MessageBox.Show("Â¡El jugador ha explotado!");
                     return;
                 }
 
@@ -385,11 +447,6 @@ namespace Tron
                 }
             }
         }
-
-
-
-
-
 
 
 
@@ -414,7 +471,7 @@ namespace Tron
 
         private void GenerarGrowItems()
         {
-            int cantidadItems = random.Next(5, 11); // Generar entre 5 y 10 ítems de crecimiento
+            int cantidadItems = random.Next(5, 11); // Generar entre 5 y 10 items de crecimiento
             for (int i = 0; i < cantidadItems; i++)
             {
                 int x = random.Next(0, grid.Width);
@@ -425,12 +482,30 @@ namespace Tron
 
         private void GenerarBombaItems()
         {
-            int cantidadItems = random.Next(5, 11); // Generar entre 5 y 10 ítems de eliminación
+            int cantidadItems = random.Next(5, 11); // Generar entre 5 y 10 items de eliminaciÃ³n
             for (int i = 0; i < cantidadItems; i++)
             {
                 int x = random.Next(0, grid.Width);
                 int y = random.Next(0, grid.Height);
                 bombaItems.Add(new Nodo(x, y));
+            }
+        }
+
+        private void GenerarPowerUps()
+        {
+            int cantidadPowerUps = random.Next(10, 21); // Generar entre 10 y 20 power-ups
+            for (int i = 0; i < cantidadPowerUps; i++)
+            {
+                int x = random.Next(0, grid.Width);
+                int y = random.Next(0, grid.Height);
+                if (random.Next(2) == 0)
+                {
+                    powerUps.Add(new ShieldPowerUp(100, x, y));
+                }
+                else
+                {
+                    powerUps.Add(new HyperSpeedPowerUp(100, 2, x, y));
+                }
             }
         }
 
@@ -445,36 +520,25 @@ namespace Tron
                 {
                     if (jugador.Combustible < jugador.CombustibleMaximo)
                     {
-                        jugador.Combustible += 10; // Incrementar el combustible
+                        jugador.Combustible += random.Next(10, 20); // Incrementar el combustible
                         celdasCombustible.Remove(item);
                     }
                     else
                     {
-                        itemQueue.Enqueue(item); // Reinsertar en la cola si el combustible está lleno
+                        itemQueue.Enqueue(item); // Reinsertar en la cola si el combustible estÃ¡ lleno
                     }
                 }
                 else if (growItems.Contains(item))
                 {
-                    jugador.Crecer(); // Aplicar ítem de crecimiento
+                    jugador.Crecer(); // Aplicar item de crecimiento
                     growItems.Remove(item);
                 }
                 else if (bombaItems.Contains(item))
                 {
                     timer.Stop();
-                    MessageBox.Show("¡El jugador ha tocado una bomba y ha sido eliminado!");
+                    MessageBox.Show("El jugador ha tocado una bomba y ha sido eliminado!");
                     return;
                 }
-            }
-        }
-
-        private void GenerateShieldPowerUps()
-        {
-            int numberOfShields = random.Next(1, 5); // Genera entre 1 y 5 poderes de escudo
-            for (int i = 0; i < numberOfShields; i++)
-            {
-                int x = random.Next(0, grid.Width);
-                int y = random.Next(0, grid.Height);
-                shieldPowerUps.Add(new ShieldPowerUp(random.Next(5, 15), x, y)); // Duración aleatoria
             }
         }
 
@@ -482,6 +546,6 @@ namespace Tron
         {
 
         }
-        
+
     }
 }

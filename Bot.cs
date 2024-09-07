@@ -6,11 +6,12 @@ namespace Tron
     public class Bot
     {
         public Nodo Cabeza { get; private set; }
-        private int velocidad;
+        public int Velocidad { get; set; }
         private Direccion direccion;
         private Random random;
         private Queue<Nodo> historialPosiciones;
         private const int maxEstela = 10;
+
         public bool ColisionaCon(Nodo nodo)
         {
             foreach (var posicion in historialPosiciones)
@@ -26,13 +27,13 @@ namespace Tron
         public Bot(int x, int y, int width, int height, int velocidad)
         {
             this.Cabeza = new Nodo(x, y);
-            this.velocidad = velocidad;
+            Velocidad = velocidad;
             this.direccion = Direccion.Derecha;
             this.random = new Random();
             this.historialPosiciones = new Queue<Nodo>();
         }
 
-        public void MoverAleatorio(int gridWidth, int gridHeight, int intervalo)
+        public void MoverAleatorio(int gridWidth, int gridHeight, int interval)
         {
             // Guardar la posición actual en el historial
             historialPosiciones.Enqueue(new Nodo(Cabeza.X, Cabeza.Y));
@@ -43,20 +44,22 @@ namespace Tron
                 historialPosiciones.Dequeue();
             }
 
-            // Mover la cabeza del bot
+            // Mover la cabeza del bot en relación con su velocidad
+            int movimiento = Math.Min(Velocidad, 1); // Limitar el movimiento a 1 píxel por tick
+
             switch (direccion)
             {
                 case Direccion.Arriba:
-                    if (Cabeza.Y > 0) Cabeza.Y -= 1;
+                    if (Cabeza.Y - movimiento >= 0) Cabeza.Y -= movimiento;
                     break;
                 case Direccion.Abajo:
-                    if (Cabeza.Y < gridHeight - 1) Cabeza.Y += 1;
+                    if (Cabeza.Y + movimiento < gridHeight) Cabeza.Y += movimiento;
                     break;
                 case Direccion.Izquierda:
-                    if (Cabeza.X > 0) Cabeza.X -= 1;
+                    if (Cabeza.X - movimiento >= 0) Cabeza.X -= movimiento;
                     break;
                 case Direccion.Derecha:
-                    if (Cabeza.X < gridWidth - 1) Cabeza.X += 1;
+                    if (Cabeza.X + movimiento < gridWidth) Cabeza.X += movimiento;
                     break;
             }
         }
@@ -94,10 +97,8 @@ namespace Tron
                 for (int i = 0; i < valor; i++)
                 {
                     historialPosiciones.Enqueue(new Nodo(ultimaPosicion.X, ultimaPosicion.Y));
-
                 }
             }
         }
-
     }
 }

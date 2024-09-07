@@ -12,6 +12,7 @@
     <None Remove="bomba.png" />
     <None Remove="gasolina.png" />
     <None Remove="grow.png" />
+    <None Remove="hyper.png" />
     <None Remove="shield.png" />
   </ItemGroup>
 
@@ -23,6 +24,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="grow.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="hyper.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="shield.png">
