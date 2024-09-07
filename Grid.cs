@@ -53,8 +53,8 @@
 
         public void DrawPlayer(Graphics g, Player player)
         {
-            // Dibujar la cabeza del jugador
-            g.FillRectangle(Brushes.Red, player.Cabeza.X * TileSize, player.Cabeza.Y * TileSize, TileSize, TileSize);
+            // Dibujar la cabeza del jugador con la imagen actual
+            g.DrawImage(player.CurrentImage, player.Cabeza.X * TileSize, player.Cabeza.Y * TileSize, TileSize, TileSize);
 
             // Dibujar la estela del jugador
             foreach (var posicion in player.ObtenerHistorialPosiciones())

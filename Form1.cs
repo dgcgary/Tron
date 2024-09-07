@@ -30,6 +30,7 @@ namespace Tron
         private List<PowerUp> powerUps;
         private Label lblPowerUpCount;
         private Label lblTopPowerUp;
+        private Stack<PowerUp> PowerUpStack;
 
 
 
@@ -72,16 +73,18 @@ namespace Tron
             itemTimer.Tick += new EventHandler(ItemTimer_Tick);
             itemTimer.Start();
 
-
-
             // Inicializar el stack de power-ups
             powerUps = new List<PowerUp>();
+
+            // Inicializar el jugador
+            timer = new System.Windows.Forms.Timer();
+            jugador = new Player(5, 5, 20, 20, random.Next(1, 11), timer);
             GenerarPowerUps();
+
             string rutaImagenShield = System.IO.Path.Combine(Application.StartupPath, "shield.png");
             imagenShield = Image.FromFile(rutaImagenShield);
             string rutaImagenHyper = System.IO.Path.Combine(Application.StartupPath, "hyper.png");
             imagenHyperSpeed = Image.FromFile(rutaImagenHyper);
-
 
             // Crear y configurar el Label para mostrar el conteo de power-ups
             lblPowerUpCount = new Label();
@@ -100,9 +103,7 @@ namespace Tron
             lblTopPowerUp.ForeColor = Color.White;
             lblTopPowerUp.BackColor = Color.Black;
             this.Controls.Add(lblTopPowerUp);
-
-
-
+            PowerUpStack = new Stack<PowerUp>(); // Inicializar PowerUpStack
 
             this.DoubleBuffered = true;
             this.KeyDown += new KeyEventHandler(Form1_KeyDown);
@@ -116,15 +117,9 @@ namespace Tron
             }
 
             // Configurar el Timer para el movimiento
-            timer = new System.Windows.Forms.Timer();
             timer.Interval = 100; // Ajusta el intervalo a 100 ms para hacer que las motos se muevan más suavemente
             timer.Tick += Timer_Tick;
             timer.Start();
-
-
-            // Inicializar el jugador
-            jugador = new Player(5, 5, 20, 20, random.Next(1, 11), timer);
-
 
             //Inicializar el label para el valor de la velocidad
             lblVelocidad = new Label();
@@ -134,7 +129,6 @@ namespace Tron
             lblVelocidad.BackColor = Color.Black;
             lblVelocidad.Text = $"Velocidad: {jugador.Velocidad}";
             this.Controls.Add(lblVelocidad);
-
 
             // Configurar el Timer para cambiar la dirección de los bots
             botDirectionTimer = new System.Windows.Forms.Timer();
@@ -169,7 +163,16 @@ namespace Tron
             }
         }
 
-
+        private void ReorganizarPowerUps()
+        {
+            if (jugador.PowerUpStack.Count > 1)
+            {
+                var topPowerUp = jugador.PowerUpStack.Pop();
+                var secondPowerUp = jugador.PowerUpStack.Pop();
+                jugador.PowerUpStack.Push(topPowerUp);
+                jugador.PowerUpStack.Push(secondPowerUp);
+            }
+        }
 
 
         private void Form1_KeyDown(object? sender, KeyEventArgs e)
@@ -177,17 +180,23 @@ namespace Tron
             if (e.KeyCode == Keys.Space && jugador.PowerUpStack.Count > 0)
             {
                 var powerUp = jugador.PowerUpStack.Pop();
-                    if (powerUp is ShieldPowerUp)
-                    {
-                        jugador.ActivateShield();
-                    }
-                    else if (powerUp is HyperSpeedPowerUp)
-                    {
-                        jugador.ActivateHyperSpeed();
-                    }
-                    UpdatePowerUpCount();
+                if (powerUp is ShieldPowerUp shieldPowerUp)
+                {
+                    jugador.ActivateShield();
+                }
+                else if (powerUp is HyperSpeedPowerUp hyperSpeedPowerUp)
+                {
+                    jugador.ActivateHyperSpeed();
+                }
+                UpdatePowerUpCount();
+
             }
-            
+            else if (e.KeyCode == Keys.A && jugador.PowerUpStack.Count > 1)
+            {
+                ReorganizarPowerUps();
+                UpdatePowerUpCount();
+            }
+
 
             switch (e.KeyCode)
             {
@@ -275,6 +284,17 @@ namespace Tron
             // Invalidate la nueva posición del jugador
             var nuevaPosicionJugador = new Rectangle(jugador.Cabeza.X * grid.TileSize, jugador.Cabeza.Y * grid.TileSize, grid.TileSize, grid.TileSize);
             this.Invalidate(nuevaPosicionJugador);
+
+            // Verificar si el jugador toca su propia estela
+            foreach (var posicion in jugador.ObtenerHistorialPosiciones())
+            {
+                if (jugador.Cabeza.X == posicion.X && jugador.Cabeza.Y == posicion.Y)
+                {
+                    timer.Stop();
+                    MessageBox.Show("¡El jugador ha tocado su propia estela y ha sido eliminado!");
+                    return;
+                }
+            }
 
             List<Bot> botsAEliminar = new List<Bot>();
 
@@ -378,14 +398,14 @@ namespace Tron
             {
                 if (jugador.Cabeza.X == celdasCombustible[i].X && jugador.Cabeza.Y == celdasCombustible[i].Y)
                 {
-                    double cantidadCombustible = random.Next(10, 21); // Cantidad aleatoria de combustible entre 10 y 20
+                    double cantidadCombustible = random.Next(10, 17); // Cantidad aleatoria de combustible entre 10 y 16
                     jugador.RecargarCombustible(cantidadCombustible);
                     celdasCombustible.RemoveAt(i);
                 }
             }
 
             // Reducir el combustible del jugador
-            jugador.ReducirCombustible(0.1);
+            jugador.ReducirCombustible(0.3);
 
             // Actualizar el Label del combustible
             lblCombustible.Text = $"Combustible: {jugador.Combustible:F1}";
@@ -450,6 +470,7 @@ namespace Tron
 
 
 
+
         private void BotDirectionTimer_Tick(object? sender, EventArgs e)
         {
             foreach (var bot in bots)
@@ -482,7 +503,7 @@ namespace Tron
 
         private void GenerarBombaItems()
         {
-            int cantidadItems = random.Next(5, 11); // Generar entre 5 y 10 items de eliminación
+            int cantidadItems = random.Next(3, 7); // Generar entre 3 y 6 items de eliminación
             for (int i = 0; i < cantidadItems; i++)
             {
                 int x = random.Next(0, grid.Width);
@@ -493,18 +514,18 @@ namespace Tron
 
         private void GenerarPowerUps()
         {
-            int cantidadPowerUps = random.Next(10, 21); // Generar entre 10 y 20 power-ups
+            int cantidadPowerUps = random.Next(8, 13); // Generar entre 8 y 13 power-ups
             for (int i = 0; i < cantidadPowerUps; i++)
             {
                 int x = random.Next(0, grid.Width);
                 int y = random.Next(0, grid.Height);
                 if (random.Next(2) == 0)
                 {
-                    powerUps.Add(new ShieldPowerUp(100, x, y));
+                    powerUps.Add(new ShieldPowerUp(jugador.invincibilityTime, x, y));
                 }
                 else
                 {
-                    powerUps.Add(new HyperSpeedPowerUp(100, 2, x, y));
+                    powerUps.Add(new HyperSpeedPowerUp(jugador.powerUpTimer.Interval / 1000, 2, x, y));
                 }
             }
         }
@@ -541,6 +562,7 @@ namespace Tron
                 }
             }
         }
+
 
         private void Form1_Load(object sender, EventArgs e)
         {

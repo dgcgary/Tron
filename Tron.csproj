@@ -13,7 +13,10 @@
     <None Remove="gasolina.png" />
     <None Remove="grow.png" />
     <None Remove="hyper.png" />
+    <None Remove="moto.png" />
+    <None Remove="rayov.png" />
     <None Remove="shield.png" />
+    <None Remove="shieldActive.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,7 +32,16 @@
     <EmbeddedResource Include="hyper.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="moto.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="rayov.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="shield.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="shieldActive.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>

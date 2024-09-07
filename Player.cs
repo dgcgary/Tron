@@ -13,14 +13,20 @@ namespace Tron
         private const int maxEstela = 3;
         private const double maxCombustible = 100;
         public bool IsInvincible { get; private set; }
-        private int invincibilityTime;
+        public int invincibilityTime;
         public bool IsHyperSpeed { get; private set; }
         private int hyperSpeedTime;
         public int originalSpeed;
         public int currentSpeed;
         private System.Windows.Forms.Timer gameTimer;
         public Stack<PowerUp> PowerUpStack { get; private set; }
-
+        public Image CurrentImage { get; set; }
+        private Image defaultImage;
+        private Image shieldImage;
+        private Image hyperSpeedImage;
+        public System.Windows.Forms.Timer powerUpTimer;
+        private Random random;
+        
 
 
 
@@ -32,13 +38,31 @@ namespace Tron
             this.Combustible = maxCombustible;
             this.historialPosiciones = new Queue<Nodo>();
             this.IsInvincible = false;
-            this.invincibilityTime = 0;
+            this.invincibilityTime = invincibilityTime;
             this.originalSpeed = velocidad;
             this.currentSpeed = originalSpeed;
             this.gameTimer = timer;
             this.PowerUpStack = new Stack<PowerUp>();
+            defaultImage = Image.FromFile("moto.png"); // Imagen por defecto de la moto
+            shieldImage = Image.FromFile("shieldActive.png"); // Imagen del escudo
+            hyperSpeedImage = Image.FromFile("rayov.png"); // Imagen del rayo
+            CurrentImage = defaultImage;
+            random = new Random();  
+
+
+            // Inicializar el temporizador para los poderes
+            powerUpTimer = new System.Windows.Forms.Timer();
+            powerUpTimer.Interval = random.Next(10, 15) * 1000;
+            powerUpTimer.Tick += PowerUpTimer_Tick;
+
         }
-    
+
+        private void PowerUpTimer_Tick(object sender, EventArgs e)
+        {
+            // Restaurar la imagen por defecto cuando el poder expire
+            CurrentImage = defaultImage;
+            powerUpTimer.Stop();
+        }
 
         public bool EsInvulnerable()
         {
@@ -48,16 +72,23 @@ namespace Tron
         public void ActivateShield()
         {
             IsInvincible = true;
-            invincibilityTime = 100; // Duración de la invulnerabilidad
+            invincibilityTime = powerUpTimer.Interval ; // Duración de la invulnerabilidad
+            CurrentImage = shieldImage;
+            powerUpTimer.Start();
+
+
+
         }
 
         public void ActivateHyperSpeed()
         {
+            CurrentImage = hyperSpeedImage;
+            powerUpTimer.Start();
             currentSpeed *= 2; // Suponiendo un multiplicador de velocidad de 2
             gameTimer.Interval = 50; // Ajustar el intervalo del Timer
                                      // Establecer un temporizador para restaurar la velocidad original después de que expire el power-up
             var restoreSpeedTimer = new System.Windows.Forms.Timer();
-            restoreSpeedTimer.Interval = 500; // Duración en milisegundos
+            restoreSpeedTimer.Interval = powerUpTimer.Interval; 
             restoreSpeedTimer.Tick += (sender, e) =>
             {
                 currentSpeed = originalSpeed;
@@ -72,7 +103,7 @@ namespace Tron
         {
             if (IsInvincible)
             {
-                invincibilityTime--;
+                invincibilityTime -= gameTimer.Interval; // Restar el intervalo del gameTimer
                 if (invincibilityTime <= 0)
                 {
                     IsInvincible = false;
