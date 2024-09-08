@@ -65,13 +65,19 @@
 
         public void DrawBot(Graphics g, Bot bot)
         {
-            // Dibujar la cabeza del bot
-            g.FillRectangle(Brushes.Green, bot.Cabeza.X * TileSize, bot.Cabeza.Y * TileSize, TileSize, TileSize);
-
-            // Dibujar la estela del bot
-            foreach (var posicion in bot.GetEstela())
+            // Dibujar la cabeza del bot con su color específico
+            using (Brush brushCabeza = new SolidBrush(bot.ColorCabeza))
             {
-                g.FillRectangle(Brushes.Yellow, posicion.X * TileSize, posicion.Y * TileSize, TileSize, TileSize);
+                g.FillRectangle(brushCabeza, bot.Cabeza.X * TileSize, bot.Cabeza.Y * TileSize, TileSize, TileSize);
+            }
+
+            // Dibujar la estela del bot con su color específico
+            using (Brush brushEstela = new SolidBrush(bot.ColorEstela))
+            {
+                foreach (var posicion in bot.GetEstela())
+                {
+                    g.FillRectangle(brushEstela, posicion.X * TileSize, posicion.Y * TileSize, TileSize, TileSize);
+                }
             }
         }
     }

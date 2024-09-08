@@ -109,12 +109,8 @@ namespace Tron
             this.KeyDown += new KeyEventHandler(Form1_KeyDown);
             this.Paint += new PaintEventHandler(Form1_Paint);
 
-            // Crear bots
-            bots = new List<Bot>();
-            for (int i = 0; i < 5; i++)
-            {
-                bots.Add(new Bot(random.Next(0, 20), random.Next(0, 20), 20, 20, random.Next(1, 11)));
-            }
+            //Crear Bots
+            InicializarBots();
 
             // Configurar el Timer para el movimiento
             timer.Interval = 100; // Ajusta el intervalo a 100 ms para hacer que las motos se muevan más suavemente
@@ -290,9 +286,12 @@ namespace Tron
             {
                 if (jugador.Cabeza.X == posicion.X && jugador.Cabeza.Y == posicion.Y)
                 {
-                    timer.Stop();
-                    MessageBox.Show("¡El jugador ha tocado su propia estela y ha sido eliminado!");
-                    return;
+                    if (!jugador.EsInvulnerable())
+                    {
+                        timer.Stop();
+                        MessageBox.Show("¡El jugador ha tocado su propia estela y ha sido eliminado!");
+                        return;
+                    }
                 }
             }
 
@@ -563,6 +562,16 @@ namespace Tron
             }
         }
 
+        private void InicializarBots()
+        {
+            bots = new List<Bot>();
+
+            // Crear cuatro bots con colores distintos
+            bots.Add(new Bot(random.Next(0, 20), random.Next(0, 20), 20, 20, random.Next(1, 11), Color.Red, Color.LightCoral)); // Bot 1
+            bots.Add(new Bot(random.Next(0, 20), random.Next(0, 20), 20, 20, random.Next(1, 11), Color.Green, Color.LightGreen)); // Bot 2
+            bots.Add(new Bot(random.Next(0, 20), random.Next(0, 20), 20, 20, random.Next(1, 11), Color.Blue, Color.LightBlue)); // Bot 3
+            bots.Add(new Bot(random.Next(0, 20), random.Next(0, 20), 20, 20, random.Next(1, 11), Color.Yellow, Color.LightYellow)); // Bot 4
+        }
 
         private void Form1_Load(object sender, EventArgs e)
         {

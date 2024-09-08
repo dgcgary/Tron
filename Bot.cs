@@ -11,6 +11,9 @@ namespace Tron
         private Random random;
         private Queue<Nodo> historialPosiciones;
         private const int maxEstela = 3;
+        public Color ColorCabeza { get; private set; }
+        public Color ColorEstela { get; private set; }
+
 
         public bool ColisionaCon(Nodo nodo)
         {
@@ -24,13 +27,17 @@ namespace Tron
             return false;
         }
 
-        public Bot(int x, int y, int width, int height, int velocidad)
+        public Bot(int x, int y, int width, int height, int velocidad, Color colorCabeza, Color colorEstela)
+
         {
             this.Cabeza = new Nodo(x, y);
             Velocidad = velocidad;
             this.direccion = Direccion.Derecha;
             this.random = new Random();
             this.historialPosiciones = new Queue<Nodo>();
+            this.ColorCabeza = colorCabeza;
+            this.ColorEstela = colorEstela;
+
         }
 
         public void MoverAleatorio(int gridWidth, int gridHeight, int interval)
