@@ -7,6 +7,7 @@ using System.Text;
 
 namespace Tron
 {
+    /// Clase principal del formulario del juego.
     public partial class Form1 : Form
     {
         private Player jugador;
@@ -144,7 +145,7 @@ namespace Tron
             this.Controls.Add(lblCombustible);
         }
 
-
+        /// Actualiza el contador de PowerUps.
         private void UpdatePowerUpCount()
         {
             lblPowerUpCount.Text = $"Power-Ups: {jugador.PowerUpStack.Count}";
@@ -158,7 +159,7 @@ namespace Tron
                 lblTopPowerUp.Text = "Top Power-Up: None";
             }
         }
-
+        /// Reorganiza los PowerUps en la interfaz.
         private void ReorganizarPowerUps()
         {
             if (jugador.PowerUpStack.Count > 1)
@@ -170,7 +171,9 @@ namespace Tron
             }
         }
 
-
+        /// Maneja el evento de pulsación de teclas. <summary>
+        /// name="sender" Objeto que envía el evento.
+        /// name="e" Argumentos del evento de pulsación de teclas.
         private void Form1_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Space && jugador.PowerUpStack.Count > 0)
@@ -211,6 +214,9 @@ namespace Tron
             }
         }
 
+        /// Maneja el evento de pintura del formulario.
+        /// name="sender" Objeto que envía el evento.
+        /// name="e" Argumentos del evento de pintura.
 
         private void Form1_Paint(object? sender, PaintEventArgs e)
         {
@@ -256,7 +262,9 @@ namespace Tron
 
 
 
-
+        /// Maneja el evento de tick del temporizador principal.
+        /// name="sender" Objeto que envía el evento.
+        /// name="e" Argumentos del evento de tick.
         private void Timer_Tick(object? sender, EventArgs e)
         {
             // Actualizar el estado del jugador
@@ -465,11 +473,14 @@ namespace Tron
                     }
                 }
             }
+           
         }
 
 
 
-
+        /// Maneja el evento de tick del temporizador de dirección de los bots.
+        /// name="sender" Objeto que envía el evento.
+        /// name="e" Argumentos del evento de tick.
         private void BotDirectionTimer_Tick(object? sender, EventArgs e)
         {
             foreach (var bot in bots)
@@ -573,6 +584,7 @@ namespace Tron
             bots.Add(new Bot(random.Next(0, 20), random.Next(0, 20), 20, 20, random.Next(1, 11), Color.Yellow, Color.LightYellow)); // Bot 4
         }
 
+        /// Maneja el evento de carga del formulario.
         private void Form1_Load(object sender, EventArgs e)
         {
 

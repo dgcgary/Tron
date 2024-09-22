@@ -1,12 +1,26 @@
 ﻿namespace Tron
 {
+   
+    /// Representa la cuadrícula del juego Tron. 
     public class Grid
-    {
+    {     
+        /// Ancho de la cuadrícula en número de nodos.      
         public int Width { get; private set; }
+      
+        /// Altura de la cuadrícula en número de nodos.      
         public int Height { get; private set; }
+       
+        /// Tamaño de cada celda de la cuadrícula en píxeles.       
         public int TileSize { get; private set; }
+       
+        /// Matriz bidimensional que contiene los nodos de la cuadrícula.       
         public Nodo[,] Nodos { get; private set; }
 
+       
+        /// Constructor para inicializar la cuadrícula con el ancho, altura y tamaño de celda especificados.     
+        ///  name="width" Ancho de la cuadrícula en número de nodos.
+        ///  name="height" Altura de la cuadrícula en número de nodos.
+        ///  name="tileSize" Tamaño de cada celda de la cuadrícula en píxeles.
         public Grid(int width, int height, int tileSize)
         {
             this.Width = width;
@@ -16,6 +30,8 @@
             CrearCuadricula();
         }
 
+       
+        /// Crea la cuadrícula inicializando los nodos y estableciendo sus referencias.      
         private void CrearCuadricula()
         {
             // Crear nodos
@@ -40,6 +56,9 @@
             }
         }
 
+       
+        /// Dibuja la cuadrícula en el objeto Graphics proporcionado.     
+        ///  name="g" Objeto Graphics donde se dibujará la cuadrícula.
         public void DrawGrid(Graphics g)
         {
             for (int x = 0; x < Width; x++)
@@ -51,6 +70,10 @@
             }
         }
 
+       
+        /// Dibuja al jugador en la cuadrícula.     
+        ///  name="g" Objeto Graphics donde se dibujará el jugador.
+        ///  name="player" Jugador que se dibujará.
         public void DrawPlayer(Graphics g, Player player)
         {
             // Dibujar la cabeza del jugador con la imagen actual
@@ -62,7 +85,10 @@
                 g.FillRectangle(Brushes.Blue, posicion.X * TileSize, posicion.Y * TileSize, TileSize, TileSize);
             }
         }
-
+       
+        /// Dibuja al bot en la cuadrícula.      
+        ///  name="g" Objeto Graphics donde se dibujará el bot.
+        ///  name="bot" Bot que se dibujará.
         public void DrawBot(Graphics g, Bot bot)
         {
             // Dibujar la cabeza del bot con su color específico
@@ -82,3 +108,4 @@
         }
     }
 }
+
