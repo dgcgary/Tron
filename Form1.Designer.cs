@@ -7,8 +7,7 @@
        
         /// Variable requerida por el diseñador.       
         private System.ComponentModel.IContainer components = null;
-
-       
+               
         /// Limpia los recursos que se están utilizando.      
         /// name="disposing" true si los recursos administrados deben ser eliminados; false en caso contrario.
         protected override void Dispose(bool disposing)
@@ -21,8 +20,7 @@
         }
 
         #region Windows Form Designer generated code
-
-       
+               
         /// Método requerido para el soporte del diseñador.      
         private void InitializeComponent()
         {

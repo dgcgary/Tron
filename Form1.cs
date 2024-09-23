@@ -33,10 +33,6 @@ namespace Tron
         private Label lblTopPowerUp;
         private Stack<PowerUp> PowerUpStack;
 
-
-
-
-
         public Form1()
         {
             InitializeComponent();
@@ -105,7 +101,8 @@ namespace Tron
             lblTopPowerUp.BackColor = Color.Black;
             this.Controls.Add(lblTopPowerUp);
             PowerUpStack = new Stack<PowerUp>(); // Inicializar PowerUpStack
-
+            
+            
             this.DoubleBuffered = true;
             this.KeyDown += new KeyEventHandler(Form1_KeyDown);
             this.Paint += new PaintEventHandler(Form1_Paint);
@@ -121,7 +118,7 @@ namespace Tron
             //Inicializar el label para el valor de la velocidad
             lblVelocidad = new Label();
             lblVelocidad.Location = new Point(10, 110);
-            lblVelocidad.Size = new Size(200, 20);
+            lblVelocidad.Size = new Size(0, 0);
             lblVelocidad.ForeColor = Color.White;
             lblVelocidad.BackColor = Color.Black;
             lblVelocidad.Text = $"Velocidad: {jugador.Velocidad}";
@@ -217,7 +214,6 @@ namespace Tron
         /// Maneja el evento de pintura del formulario.
         /// name="sender" Objeto que envía el evento.
         /// name="e" Argumentos del evento de pintura.
-
         private void Form1_Paint(object? sender, PaintEventArgs e)
         {
             grid.DrawGrid(e.Graphics);
@@ -259,8 +255,6 @@ namespace Tron
                 }
             }
         }
-
-
 
         /// Maneja el evento de tick del temporizador principal.
         /// name="sender" Objeto que envía el evento.
@@ -475,8 +469,6 @@ namespace Tron
             }
            
         }
-
-
 
         /// Maneja el evento de tick del temporizador de dirección de los bots.
         /// name="sender" Objeto que envía el evento.

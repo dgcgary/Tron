@@ -1,17 +1,10 @@
 ﻿/*
  * Clase abstracta que representa un PowerUp en el juego.
- * Un PowerUp es un objeto que otorga habilidades especiales al jugador.
  */
 public abstract class PowerUp
 {
-    /// Duración del PowerUp en segundos.
     public int Duration { get; private set; }
-
-    /// Coordenada X del PowerUp en la cuadrícula.
     public int X { get; private set; }
-
-
-    /// Coordenada Y del PowerUp en la cuadrícula.
     public int Y { get; private set; }
 
     /// Constructor protegido para inicializar un PowerUp.
@@ -26,10 +19,7 @@ public abstract class PowerUp
     }
 }
 
-/*
- * Clase que representa un PowerUp de escudo.
- * El escudo otorga invulnerabilidad al jugador durante un tiempo limitado.
- */
+//Clase que representa el escudo
 public class ShieldPowerUp : PowerUp
 {
     /// Constructor para inicializar un PowerUp de escudo
@@ -40,8 +30,7 @@ public class ShieldPowerUp : PowerUp
 }
 
 /*
- * Clase que representa un PowerUp de hipervelocidad.
- * La hipervelocidad aumenta la velocidad del jugador durante un tiempo limitado.
+ * Clase que representa la hipervelocidad
  */
 public class HyperSpeedPowerUp : PowerUp
 {

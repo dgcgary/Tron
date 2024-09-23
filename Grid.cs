@@ -15,8 +15,7 @@
        
         /// Matriz bidimensional que contiene los nodos de la cuadrícula.       
         public Nodo[,] Nodos { get; private set; }
-
-       
+               
         /// Constructor para inicializar la cuadrícula con el ancho, altura y tamaño de celda especificados.     
         ///  name="width" Ancho de la cuadrícula en número de nodos.
         ///  name="height" Altura de la cuadrícula en número de nodos.
@@ -29,8 +28,7 @@
             Nodos = new Nodo[width, height];
             CrearCuadricula();
         }
-
-       
+               
         /// Crea la cuadrícula inicializando los nodos y estableciendo sus referencias.      
         private void CrearCuadricula()
         {
@@ -55,8 +53,7 @@
                 }
             }
         }
-
-       
+               
         /// Dibuja la cuadrícula en el objeto Graphics proporcionado.     
         ///  name="g" Objeto Graphics donde se dibujará la cuadrícula.
         public void DrawGrid(Graphics g)
@@ -69,8 +66,7 @@
                 }
             }
         }
-
-       
+               
         /// Dibuja al jugador en la cuadrícula.     
         ///  name="g" Objeto Graphics donde se dibujará el jugador.
         ///  name="player" Jugador que se dibujará.

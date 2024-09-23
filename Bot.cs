@@ -6,39 +6,16 @@ namespace Tron
     
     /// Representa un bot en el juego Tron.    
     public class Bot
-    {        
-        /// Nodo que representa la cabeza del bot.        
-        public Nodo Cabeza { get; private set; }
-
-        
-        /// Velocidad del bot.        
-        public int Velocidad { get; set; }
-
-        
-        /// Dirección actual del movimiento del bot.        
-        private Direccion direccion;
-
-        
-        /// Generador de números aleatorios para cambiar la dirección del bot.        
-        private Random random;
-
-        
-        /// Cola que almacena el historial de posiciones del bot.        
-        private Queue<Nodo> historialPosiciones;
-
-        
-        /// Tamaño máximo de la estela del bot.        
-        private const int maxEstela = 3;
-
-        
-        /// Color de la cabeza del bot.        
-        public Color ColorCabeza { get; private set; }
-
-        
-        /// Color de la estela del bot.        
+    {             
+        public Nodo Cabeza { get; private set; }      
+        public int Velocidad { get; set; }       
+        private Direccion direccion;       
+        private Random random;                        
+        private Queue<Nodo> historialPosiciones;                     
+        private const int maxEstela = 3;                     
+        public Color ColorCabeza { get; private set; }                    
         public Color ColorEstela { get; private set; }
-
-        
+                
         /// Verifica si el bot colisiona con un nodo dado.        
         /// name="nodo" Nodo con el que se verifica la colisión.
         public bool ColisionaCon(Nodo nodo)
@@ -52,8 +29,7 @@ namespace Tron
             }
             return false;
         }
-
-        
+                
         /// Constructor para inicializar un nuevo bot.        
         ///  name="x" Coordenada X inicial del bot.
         ///  name="y" Coordenada Y inicial del bot.
@@ -72,8 +48,7 @@ namespace Tron
             this.ColorCabeza = colorCabeza;
             this.ColorEstela = colorEstela;
         }
-
-        
+                
         /// Mueve el bot en una dirección aleatoria dentro de los límites de la cuadrícula.
         ///  name="gridWidth" Ancho de la cuadrícula.
         ///  name="gridHeight" Altura de la cuadrícula.
@@ -108,8 +83,7 @@ namespace Tron
                     break;
             }
         }
-
-        
+                
         /// Cambia la dirección del bot a una dirección aleatoria.      
         public void CambiarDireccionAleatoria()
         {
@@ -129,15 +103,13 @@ namespace Tron
                     break;
             }
         }
-
-        
+                
         /// Obtiene la estela del bot.        
         public IEnumerable<Nodo> GetEstela()
         {
             return historialPosiciones;
         }
-
-        
+                
         /// Aumenta la estela del bot en un valor dado.        
         ///  name="valor" Valor en el que se aumenta la estela.
         public void AumentarEstela(int valor)
